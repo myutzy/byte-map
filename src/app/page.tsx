@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   ByteOrder,
   BitOrder,
@@ -8,6 +8,7 @@ import {
   numberToHex,
 } from "@/utils/binaryConversion";
 import { IEC_TYPES, DataTypeInfo } from "@/utils/dataTypes";
+import { ConversionFormat, FORMATS } from "@/utils/conversionTypes";
 
 export default function Home() {
   const [number, setNumber] = useState<string>("");
@@ -15,37 +16,34 @@ export default function Home() {
   const [byteOrder, setByteOrder] = useState<ByteOrder>("MSB");
   const [bitOrder, setBitOrder] = useState<BitOrder>("MSB");
   const [error, setError] = useState<string>("");
+  const [fromFormat, setFromFormat] = useState<ConversionFormat>("Decimal");
+  const [toFormat, setToFormat] = useState<ConversionFormat>("Binary");
 
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  // Available formats for "Convert To" dropdown
+  const availableToFormats = useMemo(
+    () => FORMATS.filter((format) => format !== fromFormat),
+    [fromFormat]
+  );
 
-    // Allow empty input, negative sign, or digits
-    if (value === "" || value === "-" || /^-?\d+$/.test(value)) {
-      // For just a negative sign, allow it but don't validate range
-      if (value === "-") {
-        if (!dataType.unsigned) {
-          setNumber(value);
-          setError("");
-        } else {
-          setError(`${dataType.name} cannot be negative`);
-        }
-        return;
-      }
+  // Available formats for "Convert From" dropdown
+  const availableFromFormats = useMemo(
+    () => FORMATS.filter((format) => format !== toFormat),
+    [toFormat]
+  );
 
-      const numValue = value === "" ? 0 : parseInt(value);
+  const handleFromFormatChange = (format: ConversionFormat) => {
+    setFromFormat(format);
+    if (format === toFormat) {
+      setToFormat(FORMATS.find((f) => f !== format) || "Binary");
+    }
+    setNumber("");
+    setError("");
+  };
 
-      // For unsigned types, don't allow negative values
-      if (dataType.unsigned && numValue < 0) {
-        setError(`${dataType.name} cannot be negative`);
-        return;
-      }
-
-      if (numValue >= dataType.min && numValue <= dataType.max) {
-        setNumber(value);
-        setError("");
-      } else {
-        setError(`Value must be between ${dataType.min} and ${dataType.max}`);
-      }
+  const handleToFormatChange = (format: ConversionFormat) => {
+    setToFormat(format);
+    if (format === fromFormat) {
+      setFromFormat(FORMATS.find((f) => f !== format) || "Decimal");
     }
   };
 
@@ -53,9 +51,21 @@ export default function Home() {
     const newDataType = IEC_TYPES[typeName];
     setDataType(newDataType);
 
-    // Validate current number against new data type
     if (number !== "" && number !== "-") {
-      const numValue = parseInt(number);
+      let numValue: number;
+
+      switch (fromFormat) {
+        case "Decimal":
+          numValue = parseInt(number);
+          break;
+        case "Binary":
+          numValue = parseInt(number.replace(/\s/g, ""), 2);
+          break;
+        case "Hexadecimal":
+          numValue = parseInt(number.replace(/\s/g, ""), 16);
+          break;
+      }
+
       if (newDataType.unsigned && numValue < 0) {
         setNumber("");
         setError(`${newDataType.name} cannot be negative`);
@@ -68,14 +78,175 @@ export default function Home() {
     }
   };
 
-  // Only parse number if it's not empty and not just a negative sign
-  const parsedNumber = number !== "" && number !== "-" ? parseInt(number) : 0;
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    switch (fromFormat) {
+      case "Decimal":
+        if (value === "" || value === "-" || /^-?\d+$/.test(value)) {
+          if (value === "-" && !dataType.unsigned) {
+            setNumber(value);
+            setError("");
+            return;
+          }
+          const numValue = value === "" ? 0 : parseInt(value);
+          if (dataType.unsigned && numValue < 0) {
+            setError(`${dataType.name} cannot be negative`);
+            return;
+          }
+          if (numValue >= dataType.min && numValue <= dataType.max) {
+            setNumber(value);
+            setError("");
+          } else {
+            setError(
+              `Value must be between ${dataType.min} and ${dataType.max}`
+            );
+          }
+        }
+        break;
+
+      case "Binary":
+        if (value === "" || /^[01\s]+$/.test(value)) {
+          const cleanBinary = value.replace(/\s/g, "");
+          if (cleanBinary.length <= dataType.bytes * 8) {
+            setNumber(value);
+            setError("");
+          } else {
+            setError(`Maximum ${dataType.bytes * 8} bits allowed`);
+          }
+        }
+        break;
+
+      case "Hexadecimal":
+        if (value === "" || /^[0-9A-Fa-f\s]+$/.test(value)) {
+          const cleanHex = value.replace(/\s/g, "");
+          if (cleanHex.length <= dataType.bytes * 2) {
+            setNumber(value);
+            setError("");
+          } else {
+            setError(`Maximum ${dataType.bytes * 2} hex digits allowed`);
+          }
+        }
+        break;
+    }
+  };
+
+  // Convert input to decimal for processing
+  const parsedNumber = useMemo(() => {
+    if (number === "" || number === "-" || error) return 0;
+
+    switch (fromFormat) {
+      case "Decimal":
+        return parseInt(number);
+      case "Binary":
+        return parseInt(number.replace(/\s/g, ""), 2);
+      case "Hexadecimal":
+        return parseInt(number.replace(/\s/g, ""), 16);
+      default:
+        return 0;
+    }
+  }, [number, fromFormat, error]);
+
+  const getInputPlaceholder = () => {
+    switch (fromFormat) {
+      case "Decimal":
+        return `Enter a ${dataType.name} value`;
+      case "Binary":
+        return `Enter binary value (e.g., 1010 1100)`;
+      case "Hexadecimal":
+        return `Enter hex value (e.g., AC)`;
+    }
+  };
+
+  const getOutputValue = () => {
+    if (number === "" || number === "-" || error) return "";
+
+    switch (toFormat) {
+      case "Binary":
+        return numberToBinary(
+          parsedNumber,
+          dataType.bytes,
+          byteOrder,
+          bitOrder
+        );
+      case "Hexadecimal":
+        return numberToHex(parsedNumber, dataType.bytes, byteOrder, bitOrder);
+      case "Decimal":
+        return parsedNumber.toString();
+    }
+  };
+
+  const handleSwapFormats = () => {
+    setFromFormat(toFormat);
+    setToFormat(fromFormat);
+    setNumber(""); // Clear input when swapping
+    setError("");
+  };
 
   return (
     <main className="min-h-screen p-8 max-w-2xl mx-auto">
       <h1 className="text-3xl font-bold mb-8">byte-map</h1>
 
       <div className="space-y-6">
+        <div className="grid grid-cols-[1fr,auto,1fr] gap-2 items-end">
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Convert From
+            </label>
+            <select
+              value={fromFormat}
+              onChange={(e) =>
+                handleFromFormatChange(e.target.value as ConversionFormat)
+              }
+              className="w-full p-2 border rounded"
+            >
+              {availableFromFormats.map((format) => (
+                <option key={format} value={format}>
+                  {format}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            onClick={handleSwapFormats}
+            className="p-2 hover:bg-gray-100 rounded-full mb-0.5"
+            title="Swap formats"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-gray-600"
+            >
+              <path d="M7 16V4M7 4L3 8M7 4L11 8M17 8v12M17 20l4-4M17 20l-4-4" />
+            </svg>
+          </button>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Convert To</label>
+            <select
+              value={toFormat}
+              onChange={(e) =>
+                handleToFormatChange(e.target.value as ConversionFormat)
+              }
+              className="w-full p-2 border rounded"
+            >
+              {availableToFormats.map((format) => (
+                <option key={format} value={format}>
+                  {format}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <div>
           <label className="block text-sm font-medium mb-2">
             Data Type (IEC 61131-3)
@@ -96,18 +267,16 @@ export default function Home() {
 
         <div>
           <label className="block text-sm font-medium mb-2">
-            Decimal Number
+            {fromFormat} Value
           </label>
           <input
             type="text"
             value={number}
             onChange={handleNumberChange}
-            className={`w-full p-2 border rounded ${
+            className={`w-full p-2 border rounded font-mono ${
               error ? "border-red-500" : ""
             }`}
-            placeholder={`Enter a ${dataType.name} value ${
-              dataType.unsigned ? "(unsigned)" : "(signed)"
-            }`}
+            placeholder={getInputPlaceholder()}
           />
           {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
         </div>
@@ -174,26 +343,14 @@ export default function Home() {
 
         <div className="space-y-4 bg-gray-50 p-4 rounded">
           <div>
-            <h2 className="font-medium mb-2">Binary Representation:</h2>
+            <h2 className="font-medium mb-2">{toFormat} Representation:</h2>
             <div className="font-mono bg-white p-3 rounded border">
-              {numberToBinary(
-                parsedNumber,
-                dataType.bytes,
-                byteOrder,
-                bitOrder
-              )}
+              {getOutputValue()}
             </div>
             <p className="text-sm text-gray-600 mt-1">
               {dataType.bytes} byte{dataType.bytes > 1 ? "s" : ""} •{" "}
               {dataType.bytes * 8} bits
             </p>
-          </div>
-
-          <div>
-            <h2 className="font-medium mb-2">Hexadecimal Representation:</h2>
-            <div className="font-mono bg-white p-3 rounded border">
-              {numberToHex(parsedNumber, dataType.bytes, byteOrder, bitOrder)}
-            </div>
           </div>
         </div>
       </div>
