@@ -135,6 +135,11 @@ export default function Home() {
                 LSB First
               </label>
             </div>
+            <p className="text-sm text-gray-600 mt-1">
+              {byteOrder === "MSB"
+                ? "Big Endian: Most significant byte at lowest address"
+                : "Little Endian: Least significant byte at lowest address"}
+            </p>
           </div>
 
           <div>
@@ -159,6 +164,11 @@ export default function Home() {
                 LSB First
               </label>
             </div>
+            <p className="text-sm text-gray-600 mt-1">
+              {bitOrder === "MSB"
+                ? "Big Endian: Most significant bit at lowest bit position"
+                : "Little Endian: Least significant bit at lowest bit position"}
+            </p>
           </div>
         </div>
 
