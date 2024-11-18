@@ -11,7 +11,7 @@ import { IEC_TYPES, DataTypeInfo } from "@/utils/dataTypes";
 
 export default function Home() {
   const [number, setNumber] = useState<string>("");
-  const [dataType, setDataType] = useState<DataTypeInfo>(IEC_TYPES["DINT"]);
+  const [dataType, setDataType] = useState<DataTypeInfo>(IEC_TYPES["INT"]);
   const [byteOrder, setByteOrder] = useState<ByteOrder>("MSB");
   const [bitOrder, setBitOrder] = useState<BitOrder>("MSB");
   const [error, setError] = useState<string>("");
