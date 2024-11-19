@@ -9,6 +9,8 @@ interface DataValue {
   byteOrder: ByteOrder;
   bitOrder: BitOrder;
   value: string;
+  signed: boolean;
+  error?: string;
 }
 
 interface Props {
@@ -25,16 +27,52 @@ export function CANFrameVisualizer({ dataValues }: Props) {
       if (!value.value || isNaN(parseInt(value.value))) return;
 
       const numValue = parseInt(value.value);
-      const binaryStr = numberToBinary(
-        numValue,
-        Math.ceil(value.bitLength / 8),
-        value.byteOrder,
-        value.bitOrder
-      ).replace(/\s/g, "");
+
+      // Handle signed values
+      let binaryValue: string;
+      if (value.signed && numValue < 0) {
+        // For negative numbers, we need to calculate the two's complement
+        const absoluteValue = Math.abs(numValue);
+        const maxUnsignedValue = Math.pow(2, value.bitLength);
+        const twosComplement = maxUnsignedValue - absoluteValue;
+        binaryValue = twosComplement.toString(2).padStart(value.bitLength, "1");
+      } else {
+        // For positive numbers or unsigned values
+        binaryValue = numValue.toString(2).padStart(value.bitLength, "0");
+      }
 
       // Calculate which bytes this value affects
       const startByte = Math.floor(value.bitStart / 8);
       const endByte = Math.floor((value.bitStart + value.bitLength - 1) / 8);
+
+      // Handle byte ordering
+      let orderedBinaryValue = binaryValue;
+      if (value.byteOrder === "LSB") {
+        // Reverse byte order
+        const byteCount = Math.ceil(value.bitLength / 8);
+        const bytes = [];
+        for (let i = 0; i < byteCount; i++) {
+          const start = i * 8;
+          const end = Math.min(start + 8, value.bitLength);
+          bytes.push(binaryValue.slice(start, end).padStart(8, "0"));
+        }
+        orderedBinaryValue = bytes.reverse().join("");
+      }
+
+      // Handle bit ordering within each byte
+      if (value.bitOrder === "LSB") {
+        // Reverse bits within each byte
+        const byteCount = Math.ceil(orderedBinaryValue.length / 8);
+        orderedBinaryValue = Array.from({ length: byteCount })
+          .map((_, i) => {
+            const start = i * 8;
+            const byte = orderedBinaryValue
+              .slice(start, start + 8)
+              .padStart(8, "0");
+            return byte.split("").reverse().join("");
+          })
+          .join("");
+      }
 
       // Update the affected bytes
       for (let i = startByte; i <= endByte && i < 8; i++) {
@@ -47,9 +85,11 @@ export function CANFrameVisualizer({ dataValues }: Props) {
 
         if (valueStartBit < 8 && valueEndBit > 0) {
           const currentByte = bytes[i].split("");
+          const binaryIndex = (i - startByte) * 8;
+
           for (let bit = valueStartBit; bit < valueEndBit; bit++) {
-            const valueBitIndex = bit - valueStartBit;
-            currentByte[bit] = binaryStr[valueBitIndex] || "0";
+            const valueBitIndex = binaryIndex + (bit - valueStartBit);
+            currentByte[bit] = orderedBinaryValue[valueBitIndex] || "0";
           }
           bytes[i] = currentByte.join("");
         }
@@ -68,7 +108,7 @@ export function CANFrameVisualizer({ dataValues }: Props) {
               {parseInt(byte, 2).toString(16).padStart(2, "0").toUpperCase()}
             </div>
             <div className="text-xs font-mono text-center">
-              {byte.split("").map((bit: string, j: number) => (
+              {byte.split("").map((bit, j) => (
                 <span
                   key={j}
                   className={`${

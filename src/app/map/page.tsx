@@ -13,6 +13,7 @@ interface DataValue {
   byteOrder: ByteOrder;
   bitOrder: BitOrder;
   value: string;
+  signed: boolean;
   error?: string;
 }
 
@@ -55,6 +56,7 @@ export default function MapPage() {
       byteOrder: "MSB",
       bitOrder: "MSB",
       value: "",
+      signed: false,
     };
     updateDataValues([...dataValues, newValue]);
   };
@@ -76,6 +78,19 @@ export default function MapPage() {
     if (value.value && isNaN(parseInt(value.value))) {
       return "Value must be a valid number";
     }
+
+    if (value.value) {
+      const numValue = parseInt(value.value);
+      const maxValue = value.signed
+        ? Math.pow(2, value.bitLength - 1) - 1
+        : Math.pow(2, value.bitLength) - 1;
+      const minValue = value.signed ? -Math.pow(2, value.bitLength - 1) : 0;
+
+      if (numValue > maxValue || numValue < minValue) {
+        return `Value must be between ${minValue} and ${maxValue}`;
+      }
+    }
+
     return "";
   };
 
@@ -139,6 +154,7 @@ export default function MapPage() {
                 <th className="p-3 text-left">Label</th>
                 <th className="p-3 text-left">Bit Start</th>
                 <th className="p-3 text-left">Bit Length</th>
+                <th className="p-3 text-left">Signed</th>
                 <th className="p-3 text-left">Byte Order</th>
                 <th className="p-3 text-left">Bit Order</th>
                 <th className="p-3 text-left">Value</th>
@@ -192,6 +208,19 @@ export default function MapPage() {
                     />
                   </td>
                   <td className="p-3">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={value.signed}
+                        onChange={(e) =>
+                          updateDataValue(value.id, "signed", e.target.checked)
+                        }
+                        className="rounded border-gray-300"
+                      />
+                      <span className="text-sm">Signed</span>
+                    </label>
+                  </td>
+                  <td className="p-3">
                     <select
                       value={value.byteOrder}
                       onChange={(e) =>
@@ -230,9 +259,16 @@ export default function MapPage() {
                       onChange={(e) =>
                         updateDataValue(value.id, "value", e.target.value)
                       }
-                      className="w-full p-1 border rounded"
+                      className={`w-full p-1 border rounded ${
+                        value.error ? "border-red-500" : ""
+                      }`}
                       placeholder="Enter value"
                     />
+                    {value.error && (
+                      <div className="text-red-500 text-xs mt-1">
+                        {value.error}
+                      </div>
+                    )}
                   </td>
                   <td className="p-3">
                     <button
