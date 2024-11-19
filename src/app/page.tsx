@@ -10,6 +10,8 @@ import {
 import { IEC_TYPES, DataTypeInfo } from "@/utils/dataTypes";
 import { ConversionFormat, FORMATS } from "@/utils/conversionTypes";
 import { BinaryMemoryMap } from "@/components/BinaryMemoryMap";
+import Link from "next/link";
+import { Header } from "@/components/Header";
 
 export default function Home() {
   const [number, setNumber] = useState<string>("");
@@ -186,7 +188,8 @@ export default function Home() {
 
   return (
     <main className="min-h-screen p-8 max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8">byte-map</h1>
+      <Header />
+      <h2 className="text-3xl font-bold mb-8">Convert</h2>
 
       <div className="space-y-6">
         <div className="grid grid-cols-[1fr,auto,1fr] gap-2 items-end">
