@@ -100,32 +100,48 @@ export function CANFrameVisualizer({ dataValues }: Props) {
   }, [dataValues]);
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-8 gap-1">
-        {frameBytes.map((byte, i) => (
-          <div key={i} className="space-y-1">
-            <div className="aspect-square border rounded bg-white flex items-center justify-center font-mono text-sm">
-              {parseInt(byte, 2).toString(16).padStart(2, "0").toUpperCase()}
-            </div>
-            <div className="text-xs font-mono text-center">
-              {byte.split("").map((bit: string, j: number) => (
-                <span
-                  key={j}
-                  className={`${
-                    bit === "1" ? "text-blue-600 font-bold" : "text-gray-400"
-                  }`}
-                >
-                  {bit}
-                </span>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+    <div className="space-y-2">
       <div className="grid grid-cols-8 gap-1 text-xs text-center text-gray-500">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i}>Byte {i}</div>
         ))}
+      </div>
+      <div className="grid grid-cols-8 gap-1">
+        {frameBytes.map((byte, i) => {
+          return (
+            <div key={i} className="space-y-1">
+              <div className="aspect-square border rounded bg-white flex items-center justify-center font-mono text-sm">
+                <div className="text-xs font-mono text-center">
+                  <div className="text-xs font-mono text-center">
+                    <span className="text-gray-400">0x</span>
+                    <span
+                      className={
+                        byte === "00000000" ? "text-gray-400" : "text-blue-600"
+                      }
+                    >
+                      {parseInt(byte, 2)
+                        .toString(16)
+                        .padStart(2, "0")
+                        .toUpperCase()}
+                    </span>
+                  </div>
+                  {byte.split("").map((bit: string, j: number) => (
+                    <span
+                      key={j}
+                      className={`${
+                        bit === "1"
+                          ? "text-blue-600 font-bold"
+                          : "text-gray-400"
+                      }`}
+                    >
+                      {bit}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
