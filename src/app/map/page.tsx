@@ -34,6 +34,10 @@ const getInitialState = (): DataValue[] => {
 
 export default function MapPage() {
   const [dataValues, setDataValues] = useState<DataValue[]>(getInitialState);
+  const [mode, setMode] = useState<"Encode" | "Decode">("Encode");
+  const [frameBytes, setFrameBytes] = useState<string[]>(
+    new Array(8).fill("00")
+  );
 
   // Wrapper for setDataValues that also updates localStorage
   const updateDataValues = (
@@ -114,15 +118,101 @@ export default function MapPage() {
     }
   };
 
+  const handleByteChange = (index: number, hexValue: string) => {
+    const newFrameBytes = [...frameBytes];
+    newFrameBytes[index] = hexValue === "" ? "00" : hexValue;
+    setFrameBytes(newFrameBytes);
+  };
+
+  const getDecodedValue = (value: DataValue): string => {
+    if (mode !== "Decode") return value.value;
+
+    try {
+      // Convert frame bytes to binary string
+      const binaryString = frameBytes
+        .map((hex) => parseInt(hex, 16).toString(2).padStart(8, "0"))
+        .join("");
+
+      // Extract bits for this value
+      const bits = binaryString.slice(
+        value.bitStart,
+        value.bitStart + value.bitLength
+      );
+
+      // Handle byte and bit ordering
+      let orderedBits = bits;
+      if (value.byteOrder === "LSB") {
+        // Reverse byte order
+        const bytes = [];
+        for (let i = 0; i < bits.length; i += 8) {
+          bytes.push(bits.slice(i, i + 8).padStart(8, "0"));
+        }
+        orderedBits = bytes.reverse().join("");
+      }
+
+      if (value.bitOrder === "LSB") {
+        // Reverse bits within each byte
+        const bytes = [];
+        for (let i = 0; i < orderedBits.length; i += 8) {
+          const byte = orderedBits.slice(i, i + 8).padStart(8, "0");
+          bytes.push(byte.split("").reverse().join(""));
+        }
+        orderedBits = bytes.join("");
+      }
+
+      // Convert to number
+      let numValue = parseInt(orderedBits, 2);
+
+      // Handle signed values
+      if (value.signed && orderedBits[0] === "1") {
+        numValue = numValue - Math.pow(2, value.bitLength);
+      }
+
+      return numValue.toString();
+    } catch (e) {
+      return "Error";
+    }
+  };
+
   return (
     <main className="min-h-screen p-8 max-w-4xl mx-auto">
       <Header />
       <h2 className="text-3xl font-bold mb-8">Map</h2>
 
+      <div className="flex justify-center mb-8">
+        <div className="inline-flex rounded-lg border border-gray-200 p-1 bg-white">
+          <button
+            onClick={() => setMode("Encode")}
+            className={`px-4 py-2 rounded-md text-sm font-medium ${
+              mode === "Encode"
+                ? "bg-blue-500 text-white"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Encode
+          </button>
+          <button
+            onClick={() => setMode("Decode")}
+            className={`px-4 py-2 rounded-md text-sm font-medium ${
+              mode === "Decode"
+                ? "bg-blue-500 text-white"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Decode
+          </button>
+        </div>
+      </div>
+
       {/* Memory Map Display */}
       <div className="bg-gray-50 p-4 rounded mb-8">
         <h2 className="font-medium mb-4">CAN Data Frame (8 bytes)</h2>
-        <CANFrameVisualizer dataValues={dataValues} />
+        <CANFrameVisualizer
+          dataValues={dataValues}
+          mode={mode}
+          frameBytes={frameBytes}
+          onByteChange={handleByteChange}
+        />
       </div>
 
       {/* Data Values Table */}
@@ -253,18 +343,24 @@ export default function MapPage() {
                     </select>
                   </td>
                   <td className="p-3">
-                    <input
-                      type="text"
-                      value={value.value}
-                      onChange={(e) =>
-                        updateDataValue(value.id, "value", e.target.value)
-                      }
-                      className={`w-full p-1 border rounded ${
-                        value.error ? "border-red-500" : ""
-                      }`}
-                      placeholder="Enter value"
-                    />
-                    {value.error && (
+                    {mode === "Encode" ? (
+                      <input
+                        type="text"
+                        value={value.value}
+                        onChange={(e) =>
+                          updateDataValue(value.id, "value", e.target.value)
+                        }
+                        className={`w-full p-1 border rounded ${
+                          value.error ? "border-red-500" : ""
+                        }`}
+                        placeholder="Enter value"
+                      />
+                    ) : (
+                      <div className="p-1 font-mono">
+                        {getDecodedValue(value)}
+                      </div>
+                    )}
+                    {mode === "Encode" && value.error && (
                       <div className="text-red-500 text-xs mt-1">
                         {value.error}
                       </div>

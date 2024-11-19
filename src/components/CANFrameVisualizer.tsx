@@ -15,11 +15,21 @@ interface DataValue {
 
 interface Props {
   dataValues: DataValue[];
+  mode: "Encode" | "Decode";
+  frameBytes: string[];
+  onByteChange?: (index: number, value: string) => void;
 }
 
-export function CANFrameVisualizer({ dataValues }: Props) {
-  // Calculate the binary representation for each byte
-  const frameBytes = useMemo(() => {
+export function CANFrameVisualizer({
+  dataValues,
+  mode,
+  frameBytes,
+  onByteChange,
+}: Props) {
+  // Only calculate encoded bytes in Encode mode
+  const encodedBytes = useMemo(() => {
+    if (mode === "Decode") return frameBytes;
+
     // Initialize 8 bytes with zeros
     const bytes = new Array(8).fill("00000000");
 
@@ -97,7 +107,14 @@ export function CANFrameVisualizer({ dataValues }: Props) {
     });
 
     return bytes;
-  }, [dataValues]);
+  }, [dataValues, mode, frameBytes]);
+
+  const handleHexInput = (index: number, hexValue: string) => {
+    const cleanHex = hexValue.replace(/[^0-9A-Fa-f]/g, "");
+    if (cleanHex.length <= 2) {
+      onByteChange?.(index, cleanHex.toUpperCase() || "00");
+    }
+  };
 
   return (
     <div className="space-y-2">
@@ -107,36 +124,59 @@ export function CANFrameVisualizer({ dataValues }: Props) {
         ))}
       </div>
       <div className="grid grid-cols-8 gap-1">
-        {frameBytes.map((byte, i) => {
+        {encodedBytes.map((byte, i) => {
+          const hexValue =
+            mode === "Decode"
+              ? frameBytes[i]
+              : parseInt(byte, 2).toString(16).padStart(2, "0").toUpperCase();
+          const binaryValue =
+            mode === "Decode"
+              ? parseInt(hexValue || "0", 16)
+                  .toString(2)
+                  .padStart(8, "0")
+              : byte;
+
           return (
             <div key={i} className="space-y-1">
-              <div className="aspect-square border rounded bg-white flex items-center justify-center font-mono text-sm">
+              <div className="aspect-square border rounded bg-white flex flex-col items-center justify-center font-mono text-sm">
                 <div className="text-xs font-mono text-center">
-                  <div className="text-xs font-mono text-center">
-                    <span className="text-gray-400">0x</span>
-                    <span
-                      className={
-                        byte === "00000000" ? "text-gray-400" : "text-blue-600"
-                      }
-                    >
-                      {parseInt(byte, 2)
-                        .toString(16)
-                        .padStart(2, "0")
-                        .toUpperCase()}
-                    </span>
+                  {mode === "Encode" ? (
+                    <div className="text-xs font-mono text-center">
+                      <span className="text-gray-400">0x</span>
+                      <span
+                        className={
+                          hexValue === "00" ? "text-gray-400" : "text-blue-600"
+                        }
+                      >
+                        {hexValue}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      <span className="text-gray-400 mr-0.5">0x</span>
+                      <input
+                        type="text"
+                        value={hexValue === "00" ? "" : hexValue}
+                        onChange={(e) => handleHexInput(i, e.target.value)}
+                        placeholder="00"
+                        className="w-6 text-center border rounded px-0.5 text-blue-600 placeholder-gray-400"
+                      />
+                    </div>
+                  )}
+                  <div className="mt-1">
+                    {binaryValue.split("").map((bit: string, j: number) => (
+                      <span
+                        key={j}
+                        className={`${
+                          bit === "1"
+                            ? "text-blue-600 font-bold"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        {bit}
+                      </span>
+                    ))}
                   </div>
-                  {byte.split("").map((bit: string, j: number) => (
-                    <span
-                      key={j}
-                      className={`${
-                        bit === "1"
-                          ? "text-blue-600 font-bold"
-                          : "text-gray-400"
-                      }`}
-                    >
-                      {bit}
-                    </span>
-                  ))}
                 </div>
               </div>
             </div>
