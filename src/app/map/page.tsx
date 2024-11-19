@@ -177,31 +177,33 @@ export default function MapPage() {
   return (
     <main className="min-h-screen p-8 max-w-4xl mx-auto">
       <Header />
-      <h2 className="text-3xl font-bold mb-8">Map</h2>
-
-      <div className="flex justify-center mb-8">
-        <div className="inline-flex rounded-lg border border-gray-200 p-1 bg-white">
-          <button
-            onClick={() => setMode("Encode")}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${
-              mode === "Encode"
-                ? "bg-blue-500 text-white"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Encode
-          </button>
-          <button
-            onClick={() => setMode("Decode")}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${
-              mode === "Decode"
-                ? "bg-blue-500 text-white"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Decode
-          </button>
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-3xl font-bold">Map</h2>
+        <div className="flex-1 flex justify-center">
+          <div className="inline-flex rounded-lg border border-gray-200 p-1 bg-white">
+            <button
+              onClick={() => setMode("Encode")}
+              className={`px-4 py-2 rounded-md text-sm font-medium ${
+                mode === "Encode"
+                  ? "bg-blue-500 text-white"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Encode
+            </button>
+            <button
+              onClick={() => setMode("Decode")}
+              className={`px-4 py-2 rounded-md text-sm font-medium ${
+                mode === "Decode"
+                  ? "bg-blue-500 text-white"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Decode
+            </button>
+          </div>
         </div>
+        <div className="w-[100px]"></div>
       </div>
 
       {/* Memory Map Display */}
