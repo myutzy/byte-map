@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { ByteOrder, BitOrder } from "@/utils/binaryConversion";
-import Link from "next/link";
-import { CANFrameVisualizer } from "@/components/CANFrameVisualizer";
 import { Header } from "@/components/Header";
+import { CANFrameVisualizer } from "@/components/CANFrameVisualizer";
 
 interface DataValue {
   id: string;
@@ -17,8 +16,35 @@ interface DataValue {
   error?: string;
 }
 
+const STORAGE_KEY = "byte-map-data-values";
+
+// Load initial state from localStorage
+const getInitialState = (): DataValue[] => {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch (e) {
+    console.error("Failed to load saved data values:", e);
+    return [];
+  }
+};
+
 export default function MapPage() {
-  const [dataValues, setDataValues] = useState<DataValue[]>([]);
+  const [dataValues, setDataValues] = useState<DataValue[]>(getInitialState);
+
+  // Wrapper for setDataValues that also updates localStorage
+  const updateDataValues = (
+    newValues: DataValue[] | ((prev: DataValue[]) => DataValue[])
+  ) => {
+    setDataValues((currentValues) => {
+      const nextValues =
+        typeof newValues === "function" ? newValues(currentValues) : newValues;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextValues));
+      return nextValues;
+    });
+  };
 
   const addDataValue = () => {
     const newValue: DataValue = {
@@ -30,11 +56,11 @@ export default function MapPage() {
       bitOrder: "MSB",
       value: "",
     };
-    setDataValues([...dataValues, newValue]);
+    updateDataValues([...dataValues, newValue]);
   };
 
   const deleteDataValue = (id: string) => {
-    setDataValues(dataValues.filter((value) => value.id !== id));
+    updateDataValues(dataValues.filter((value) => value.id !== id));
   };
 
   const validateDataValue = (value: DataValue): string => {
@@ -54,7 +80,7 @@ export default function MapPage() {
   };
 
   const updateDataValue = (id: string, field: keyof DataValue, value: any) => {
-    setDataValues(
+    updateDataValues(
       dataValues.map((item) => {
         if (item.id !== id) return item;
         const updatedValue = { ...item, [field]: value };
@@ -65,6 +91,12 @@ export default function MapPage() {
         };
       })
     );
+  };
+
+  const handleClearValues = () => {
+    if (window.confirm("Are you sure you want to clear all data values?")) {
+      updateDataValues([]);
+    }
   };
 
   return (
@@ -82,12 +114,22 @@ export default function MapPage() {
       <div className="bg-white rounded border">
         <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
           <h2 className="font-medium">Data Values</h2>
-          <button
-            onClick={addDataValue}
-            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Add Value
-          </button>
+          <div className="flex gap-2">
+            {dataValues.length > 0 && (
+              <button
+                onClick={handleClearValues}
+                className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
+              >
+                Clear
+              </button>
+            )}
+            <button
+              onClick={addDataValue}
+              className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Add Value
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
