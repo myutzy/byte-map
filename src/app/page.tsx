@@ -9,6 +9,7 @@ import {
 } from "@/utils/binaryConversion";
 import { IEC_TYPES, DataTypeInfo } from "@/utils/dataTypes";
 import { ConversionFormat, FORMATS } from "@/utils/conversionTypes";
+import { BinaryMemoryMap } from "@/components/BinaryMemoryMap";
 
 export default function Home() {
   const [number, setNumber] = useState<string>("");
@@ -351,6 +352,17 @@ export default function Home() {
               {dataType.bytes} byte{dataType.bytes > 1 ? "s" : ""} •{" "}
               {dataType.bytes * 8} bits
             </p>
+            {toFormat === "Binary" &&
+              !error &&
+              number !== "" &&
+              number !== "-" && (
+                <BinaryMemoryMap
+                  binaryString={getOutputValue()}
+                  byteOrder={byteOrder}
+                  bitOrder={bitOrder}
+                  bytes={dataType.bytes}
+                />
+              )}
           </div>
         </div>
       </div>
