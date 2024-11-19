@@ -108,7 +108,7 @@ export function CANFrameVisualizer({ dataValues }: Props) {
               {parseInt(byte, 2).toString(16).padStart(2, "0").toUpperCase()}
             </div>
             <div className="text-xs font-mono text-center">
-              {byte.split("").map((bit, j) => (
+              {byte.split("").map((bit: string, j: number) => (
                 <span
                   key={j}
                   className={`${
