@@ -33,7 +33,11 @@ export function BinaryMemoryMap({
     byteOrder === "MSB" ? byteGroups : [...byteGroups].reverse();
 
   return (
-    <div className="mt-4 space-y-2">
+    <div className="mt-4">
+      <div className="flex justify-between text-sm text-gray-600 mb-1">
+        <span>{bitOrder === "MSB" ? "MSB > LSB" : "LSB > MSB"}</span>
+        <span>Memory Address: Increasing →</span>
+      </div>
       <div className="flex flex-wrap gap-2">
         {orderedBytes.map((byte, index) => (
           <div key={index} className="border rounded p-2 bg-white">
@@ -77,9 +81,6 @@ export function BinaryMemoryMap({
             </div>
           </div>
         ))}
-      </div>
-      <div className="text-sm text-gray-600">
-        Memory Address: {byteOrder === "MSB" ? "Increasing →" : "← Increasing"}
       </div>
     </div>
   );
