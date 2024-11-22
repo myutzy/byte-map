@@ -248,7 +248,6 @@ export default function MapPage() {
                 <th className="p-3 text-left">Bit Length</th>
                 <th className="p-3 text-left">Signed</th>
                 <th className="p-3 text-left">Byte Order</th>
-                <th className="p-3 text-left">Bit Order</th>
                 <th className="p-3 text-left">Value</th>
                 <th className="p-3 text-left">Actions</th>
               </tr>
@@ -320,22 +319,6 @@ export default function MapPage() {
                           value.id,
                           "byteOrder",
                           e.target.value as ByteOrder
-                        )
-                      }
-                      className="p-1 border rounded"
-                    >
-                      <option value="MSB">MSB First</option>
-                      <option value="LSB">LSB First</option>
-                    </select>
-                  </td>
-                  <td className="p-3">
-                    <select
-                      value={value.bitOrder}
-                      onChange={(e) =>
-                        updateDataValue(
-                          value.id,
-                          "bitOrder",
-                          e.target.value as BitOrder
                         )
                       }
                       className="p-1 border rounded"

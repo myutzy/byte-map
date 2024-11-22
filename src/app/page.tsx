@@ -10,7 +10,6 @@ import {
 import { IEC_TYPES, DataTypeInfo } from "@/utils/dataTypes";
 import { ConversionFormat, FORMATS } from "@/utils/conversionTypes";
 import { BinaryMemoryMap } from "@/components/BinaryMemoryMap";
-import Link from "next/link";
 import { Header } from "@/components/Header";
 
 export default function Home() {
@@ -312,35 +311,6 @@ export default function Home() {
               {byteOrder === "MSB"
                 ? "Big Endian: Most significant byte at lowest address"
                 : "Little Endian: Least significant byte at lowest address"}
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Bit Order</label>
-            <div className="flex gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  checked={bitOrder === "MSB"}
-                  onChange={() => setBitOrder("MSB")}
-                  className="mr-2"
-                />
-                MSB First
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  checked={bitOrder === "LSB"}
-                  onChange={() => setBitOrder("LSB")}
-                  className="mr-2"
-                />
-                LSB First
-              </label>
-            </div>
-            <p className="text-sm text-gray-600 mt-1">
-              {bitOrder === "MSB"
-                ? "Big Endian: Most significant bit at lowest bit position"
-                : "Little Endian: Least significant bit at lowest bit position"}
             </p>
           </div>
         </div>
