@@ -197,9 +197,9 @@ export default function MapPage() {
   };
 
   return (
-    <main className="min-h-screen max-w-4xl mx-auto bg-white shadow dark:bg-gray-900 p-8">
+    <main className="min-h-screen max-w-4xl mx-auto bg-white dark:bg-gray-900 p-8">
       <Header />
-      <div className="flex justify-center items-center mb-8">
+      <div className="flex justify-center items-center mb-4">
         <div className="inline-flex rounded-lg border border-gray-200 p-1 bg-white">
           <button
             onClick={() => setMode("Encode")}

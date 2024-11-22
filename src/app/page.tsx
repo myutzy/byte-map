@@ -201,7 +201,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen max-w-4xl mx-auto bg-white shadow dark:bg-gray-900 p-8">
+    <main className="min-h-screen max-w-4xl mx-auto bg-white dark:bg-gray-900 p-8">
       <Header />
 
       <div className="space-y-6 max-w-4xl mx-auto">
