@@ -202,101 +202,106 @@ export default function Home() {
   return (
     <main className="min-h-screen p-8 max-w-2xl mx-auto">
       <Header />
-      <h2 className="text-3xl font-bold mb-8">Convert</h2>
 
       <div className="space-y-6">
-        <div className="grid grid-cols-[1fr,auto,1fr] gap-2 items-end">
+        <div className="grid grid-cols-[1fr,auto,1fr] gap-4 items-end">
+          <div className="col-span-3 grid grid-cols-[1fr,auto,1fr] gap-4 items-end">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Convert From
+              </label>
+              <select
+                value={fromFormat}
+                onChange={(e) =>
+                  handleFromFormatChange(e.target.value as ConversionFormat)
+                }
+                className="w-full p-2 border rounded"
+              >
+                {availableFromFormats.map((format) => (
+                  <option key={format} value={format}>
+                    {format}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              onClick={handleSwapFormats}
+              className="p-2 hover:bg-gray-100 rounded-full mb-0.5"
+              title="Swap formats"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-gray-600"
+              >
+                <path d="M7 16V4M7 4L3 8M7 4L11 8M17 8v12M17 20l4-4M17 20l-4-4" />
+              </svg>
+            </button>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Convert To
+              </label>
+              <select
+                value={toFormat}
+                onChange={(e) =>
+                  handleToFormatChange(e.target.value as ConversionFormat)
+                }
+                className="w-full p-2 border rounded"
+              >
+                {availableToFormats.map((format) => (
+                  <option key={format} value={format}>
+                    {format}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-[1fr,1fr] gap-6">
           <div>
             <label className="block text-sm font-medium mb-2">
-              Convert From
+              {fromFormat} Value
             </label>
-            <select
-              value={fromFormat}
-              onChange={(e) =>
-                handleFromFormatChange(e.target.value as ConversionFormat)
-              }
-              className="w-full p-2 border rounded"
-            >
-              {availableFromFormats.map((format) => (
-                <option key={format} value={format}>
-                  {format}
-                </option>
-              ))}
-            </select>
+            <input
+              type="text"
+              value={number}
+              onChange={handleNumberChange}
+              className={`w-full p-2 border rounded font-mono ${
+                error ? "border-red-500" : ""
+              }`}
+              placeholder={getInputPlaceholder()}
+            />
+            {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
           </div>
-
-          <button
-            onClick={handleSwapFormats}
-            className="p-2 hover:bg-gray-100 rounded-full mb-0.5"
-            title="Swap formats"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-gray-600"
-            >
-              <path d="M7 16V4M7 4L3 8M7 4L11 8M17 8v12M17 20l4-4M17 20l-4-4" />
-            </svg>
-          </button>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Convert To</label>
+            <label className="block text-sm font-medium mb-2">
+              Data Type (IEC 61131-3)
+            </label>
             <select
-              value={toFormat}
-              onChange={(e) =>
-                handleToFormatChange(e.target.value as ConversionFormat)
-              }
+              value={dataType.name}
+              onChange={(e) => handleDataTypeChange(e.target.value)}
               className="w-full p-2 border rounded"
             >
-              {availableToFormats.map((format) => (
-                <option key={format} value={format}>
-                  {format}
-                </option>
-              ))}
+              {Object.values(IEC_TYPES)
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((type) => (
+                  <option key={type.name} value={type.name}>
+                    {type.name} ({type.bits || type.bytes * 8}-bit)
+                  </option>
+                ))}
             </select>
           </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Data Type (IEC 61131-3)
-          </label>
-          <select
-            value={dataType.name}
-            onChange={(e) => handleDataTypeChange(e.target.value)}
-            className="w-full p-2 border rounded"
-          >
-            {Object.values(IEC_TYPES)
-              .sort((a, b) => a.name.localeCompare(b.name))
-              .map((type) => (
-                <option key={type.name} value={type.name}>
-                  {type.name} ({type.bits || type.bytes * 8}-bit)
-                </option>
-              ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            {fromFormat} Value
-          </label>
-          <input
-            type="text"
-            value={number}
-            onChange={handleNumberChange}
-            className={`w-full p-2 border rounded font-mono ${
-              error ? "border-red-500" : ""
-            }`}
-            placeholder={getInputPlaceholder()}
-          />
-          {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
