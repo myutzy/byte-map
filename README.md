@@ -1,36 +1,19 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# byte-map
 
-## Getting Started
+byte-map is a tool for visualizing and converting between different data formats. It is built with Next.js and Tailwind CSS.
 
-First, run the development server:
+## Convert
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Convert between different data formats: Binary, Hex, and Decimal. Data Type (per IEC 61131-3) and Byte Order (Big Endian or Little Endian) influence the resulting visualization.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Map
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Visualize data as a memory map. In `Encode` mode, each data value requires a value to be specified and the result will be displayed in the data frame. In `Decode` mode, values are specified within the data frame and the result will be displayed in the data values table.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## How do I use it?
 
-## Learn More
+Click the website link in the `About` area to use the current published instance, or run it locally via `npm run dev` or `pnpm dev`.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+I would love to hear your feedback! If you have any suggestions or find any bugs, please [open an issue](https://github.com/myutzy/byte-map/issues).
