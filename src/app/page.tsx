@@ -315,29 +315,31 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="space-y-4 bg-gray-50 p-4 rounded">
-          <div>
-            <h2 className="font-medium mb-2">{toFormat} Representation:</h2>
-            <div className="font-mono bg-white p-3 rounded border">
-              {getOutputValue()}
+        {number !== "" && (
+          <div className="space-y-4 bg-gray-50 p-4 rounded">
+            <div>
+              <h2 className="font-medium mb-2">{toFormat} Representation:</h2>
+              <div className="font-mono bg-white p-3 rounded border">
+                {getOutputValue()}
+              </div>
+              <p className="text-sm text-gray-600 mt-1">
+                {dataType.bytes} byte{dataType.bytes > 1 ? "s" : ""} •{" "}
+                {dataType.bytes * 8} bits
+              </p>
+              {toFormat === "Binary" &&
+                !error &&
+                number !== "" &&
+                number !== "-" && (
+                  <BinaryMemoryMap
+                    binaryString={getOutputValue()}
+                    byteOrder={byteOrder}
+                    bitOrder={bitOrder}
+                    bytes={dataType.bytes}
+                  />
+                )}
             </div>
-            <p className="text-sm text-gray-600 mt-1">
-              {dataType.bytes} byte{dataType.bytes > 1 ? "s" : ""} •{" "}
-              {dataType.bytes * 8} bits
-            </p>
-            {toFormat === "Binary" &&
-              !error &&
-              number !== "" &&
-              number !== "-" && (
-                <BinaryMemoryMap
-                  binaryString={getOutputValue()}
-                  byteOrder={byteOrder}
-                  bitOrder={bitOrder}
-                  bytes={dataType.bytes}
-                />
-              )}
           </div>
-        </div>
+        )}
       </div>
     </main>
   );
