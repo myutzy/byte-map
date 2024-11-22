@@ -1,6 +1,7 @@
 export interface DataTypeInfo {
   name: string;
   bytes: number;
+  bits?: number;
   min: number;
   max: number;
   unsigned?: boolean;
@@ -24,6 +25,14 @@ export const IEC_TYPES: { [key: string]: DataTypeInfo } = {
     bytes: 8,
     min: 0,
     max: 18446744073709551615,
+    unsigned: true,
+  },
+  BOOL: {
+    name: "BOOL",
+    bytes: 1,
+    bits: 1,
+    min: 0,
+    max: 1,
     unsigned: true,
   },
 };
