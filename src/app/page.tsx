@@ -85,15 +85,23 @@ export default function Home() {
 
     switch (fromFormat) {
       case "Decimal":
-        if (value === "" || value === "-" || /^-?\d+$/.test(value)) {
-          if (value === "-" && !dataType.unsigned) {
+        if (value === "-") {
+          if (dataType.name.match(/^(SINT|INT|DINT|LINT)$/)) {
             setNumber(value);
             setError("");
             return;
           }
+          return;
+        }
+
+        if (value === "" || /^-?\d+$/.test(value)) {
           const numValue = value === "" ? 0 : parseInt(value);
-          if (dataType.unsigned && numValue < 0) {
+          if (numValue < 0 && !dataType.name.match(/^(SINT|INT|DINT|LINT)$/)) {
             setError(`${dataType.name} cannot be negative`);
+            return;
+          }
+          if (dataType.name === "BOOL" && numValue > 1) {
+            setError("BOOL can only be 0 or 1");
             return;
           }
           if (numValue >= dataType.min && numValue <= dataType.max) {
@@ -152,11 +160,17 @@ export default function Home() {
   const getInputPlaceholder = () => {
     switch (fromFormat) {
       case "Decimal":
-        return `Enter a ${dataType.name} value`;
+        return dataType.name === "BOOL"
+          ? "Enter 0 or 1"
+          : `Enter a ${dataType.name} value`;
       case "Binary":
-        return `Enter binary value (e.g., 1010 1100)`;
+        return `Enter binary value (e.g., ${
+          dataType.name === "BOOL" ? "1" : "1010 1100"
+        })`;
       case "Hexadecimal":
-        return `Enter hex value (e.g., AC)`;
+        return `Enter hex value (e.g., ${
+          dataType.name === "BOOL" ? "0 or 1" : "AC"
+        })`;
     }
   };
 
@@ -259,12 +273,13 @@ export default function Home() {
             onChange={(e) => handleDataTypeChange(e.target.value)}
             className="w-full p-2 border rounded"
           >
-            {Object.values(IEC_TYPES).map((type) => (
-              <option key={type.name} value={type.name}>
-                {type.name} ({type.bytes} byte{type.bytes > 1 ? "s" : ""},{" "}
-                {type.min} to {type.max})
-              </option>
-            ))}
+            {Object.values(IEC_TYPES)
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((type) => (
+                <option key={type.name} value={type.name}>
+                  {type.name} ({type.bits || type.bytes * 8}-bit)
+                </option>
+              ))}
           </select>
         </div>
 
@@ -309,8 +324,8 @@ export default function Home() {
             </div>
             <p className="text-sm text-gray-600 mt-1">
               {byteOrder === "MSB"
-                ? "Big Endian: Most significant byte at lowest address. Also known as 'Intel' format."
-                : "Little Endian: Least significant byte at lowest address. Also known as 'Motorola' format."}
+                ? "Big Endian: Most significant byte at lowest address. Also known as 'Motorola' format."
+                : "Little Endian: Least significant byte at lowest address. Also known as 'Intel' format."}
             </p>
           </div>
         </div>
