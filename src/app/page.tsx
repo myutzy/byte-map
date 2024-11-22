@@ -295,7 +295,7 @@ export default function Home() {
                   onChange={() => setByteOrder("MSB")}
                   className="mr-2"
                 />
-                MSB First
+                Big Endian
               </label>
               <label className="flex items-center">
                 <input
@@ -304,13 +304,13 @@ export default function Home() {
                   onChange={() => setByteOrder("LSB")}
                   className="mr-2"
                 />
-                LSB First
+                Little Endian
               </label>
             </div>
             <p className="text-sm text-gray-600 mt-1">
               {byteOrder === "MSB"
-                ? "Big Endian: Most significant byte at lowest address"
-                : "Little Endian: Least significant byte at lowest address"}
+                ? "Big Endian: Most significant byte at lowest address. Also known as 'Intel' format."
+                : "Little Endian: Least significant byte at lowest address. Also known as 'Motorola' format."}
             </p>
           </div>
         </div>

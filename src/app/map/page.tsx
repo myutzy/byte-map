@@ -18,6 +18,7 @@ interface DataValue {
 }
 
 const STORAGE_KEY = "byte-map-data-values";
+const BYTE_ORDER_KEY = "byte-map-byte-order";
 
 // Load initial state from localStorage
 const getInitialState = (): DataValue[] => {
@@ -32,9 +33,16 @@ const getInitialState = (): DataValue[] => {
   }
 };
 
+const getInitialByteOrder = (): ByteOrder => {
+  if (typeof window === "undefined") return "MSB";
+  return (localStorage.getItem(BYTE_ORDER_KEY) as ByteOrder) || "MSB";
+};
+
 export default function MapPage() {
   const [dataValues, setDataValues] = useState<DataValue[]>(getInitialState);
   const [mode, setMode] = useState<"Encode" | "Decode">("Encode");
+  const [globalByteOrder, setGlobalByteOrder] =
+    useState<ByteOrder>(getInitialByteOrder);
   const [frameBytes, setFrameBytes] = useState<string[]>(
     new Array(8).fill("00")
   );
@@ -57,7 +65,7 @@ export default function MapPage() {
       label: "",
       bitStart: 0,
       bitLength: 8,
-      byteOrder: "MSB",
+      byteOrder: globalByteOrder,
       bitOrder: "MSB",
       value: "",
       signed: false,
@@ -174,6 +182,19 @@ export default function MapPage() {
     }
   };
 
+  const handleByteOrderChange = (newOrder: ByteOrder) => {
+    setGlobalByteOrder(newOrder);
+    localStorage.setItem(BYTE_ORDER_KEY, newOrder);
+
+    // Update all data values with the new byte order
+    updateDataValues(
+      dataValues.map((value) => ({
+        ...value,
+        byteOrder: newOrder,
+      }))
+    );
+  };
+
   return (
     <main className="min-h-screen p-8 max-w-4xl mx-auto">
       <Header />
@@ -221,21 +242,36 @@ export default function MapPage() {
       <div className="bg-white rounded border">
         <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
           <h2 className="font-medium">Data Values</h2>
-          <div className="flex gap-2">
-            {dataValues.length > 0 && (
-              <button
-                onClick={handleClearValues}
-                className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium">Byte Order:</label>
+              <select
+                value={globalByteOrder}
+                onChange={(e) =>
+                  handleByteOrderChange(e.target.value as ByteOrder)
+                }
+                className="p-1 border rounded"
               >
-                Clear
+                <option value="MSB">Big Endian</option>
+                <option value="LSB">Little Endian</option>
+              </select>
+            </div>
+            <div className="flex gap-2">
+              {dataValues.length > 0 && (
+                <button
+                  onClick={handleClearValues}
+                  className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
+                >
+                  Clear
+                </button>
+              )}
+              <button
+                onClick={addDataValue}
+                className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Add Value
               </button>
-            )}
-            <button
-              onClick={addDataValue}
-              className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Add Value
-            </button>
+            </div>
           </div>
         </div>
 
@@ -247,7 +283,6 @@ export default function MapPage() {
                 <th className="p-3 text-left">Bit Start</th>
                 <th className="p-3 text-left">Bit Length</th>
                 <th className="p-3 text-left">Signed</th>
-                <th className="p-3 text-left">Byte Order</th>
                 <th className="p-3 text-left">Value</th>
                 <th className="p-3 text-left">Actions</th>
               </tr>
@@ -312,22 +347,6 @@ export default function MapPage() {
                     </label>
                   </td>
                   <td className="p-3">
-                    <select
-                      value={value.byteOrder}
-                      onChange={(e) =>
-                        updateDataValue(
-                          value.id,
-                          "byteOrder",
-                          e.target.value as ByteOrder
-                        )
-                      }
-                      className="p-1 border rounded"
-                    >
-                      <option value="MSB">MSB First</option>
-                      <option value="LSB">LSB First</option>
-                    </select>
-                  </td>
-                  <td className="p-3">
                     {mode === "Encode" ? (
                       <input
                         type="text"
@@ -345,7 +364,7 @@ export default function MapPage() {
                         {getDecodedValue(value)}
                       </div>
                     )}
-                    {mode === "Encode" && value.error && (
+                    {mode === "Encode" && value.error && value.value && (
                       <div className="text-red-500 text-xs mt-1">
                         {value.error}
                       </div>
