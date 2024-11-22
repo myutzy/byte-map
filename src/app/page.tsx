@@ -11,6 +11,7 @@ import { IEC_TYPES, DataTypeInfo } from "@/utils/dataTypes";
 import { ConversionFormat, FORMATS } from "@/utils/conversionTypes";
 import { BinaryMemoryMap } from "@/components/BinaryMemoryMap";
 import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 
 export default function Home() {
   const [number, setNumber] = useState<string>("");
@@ -200,10 +201,10 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen p-8 max-w-4xl mx-auto">
+    <main className="min-h-screen max-w-4xl mx-auto bg-white shadow dark:bg-gray-900 p-8">
       <Header />
 
-      <div className="space-y-6 max-w-2xl mx-auto">
+      <div className="space-y-6 max-w-4xl mx-auto">
         <div className="grid grid-cols-[1fr,auto,1fr] gap-4 items-end">
           <div className="col-span-3 grid grid-cols-[1fr,auto,1fr] gap-4 items-end">
             <div>
@@ -361,6 +362,7 @@ export default function Home() {
           </div>
         )}
       </div>
+      <Footer />
     </main>
   );
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ByteOrder, BitOrder } from "@/utils/binaryConversion";
 import { Header } from "@/components/Header";
 import { CANFrameVisualizer } from "@/components/CANFrameVisualizer";
+import { Footer } from "@/components/Footer";
 
 interface DataValue {
   id: string;
@@ -196,7 +197,7 @@ export default function MapPage() {
   };
 
   return (
-    <main className="min-h-screen p-8 max-w-4xl mx-auto">
+    <main className="min-h-screen max-w-4xl mx-auto bg-white shadow dark:bg-gray-900 p-8">
       <Header />
       <div className="flex justify-center items-center mb-8">
         <div className="inline-flex rounded-lg border border-gray-200 p-1 bg-white">
@@ -225,7 +226,7 @@ export default function MapPage() {
 
       {/* Memory Map Display */}
       <div className="bg-gray-50 p-4 rounded mb-8">
-        <h2 className="font-medium mb-4">CAN Data Frame (8 bytes)</h2>
+        <h2 className="font-medium mb-4">Data Frame (8 bytes)</h2>
         <CANFrameVisualizer
           dataValues={dataValues}
           mode={mode}
@@ -402,6 +403,7 @@ export default function MapPage() {
           </table>
         </div>
       </div>
+      <Footer />
     </main>
   );
 }
