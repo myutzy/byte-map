@@ -462,35 +462,32 @@ export default function MapPage() {
   return (
     <main className="min-h-screen max-w-4xl mx-auto bg-white dark:bg-neutral-900 p-8">
       <Header />
-      <div className="flex justify-center items-center mb-4">
-        <div className="inline-flex rounded-lg border border-gray-200 dark:border-neutral-800 p-1 bg-white dark:bg-neutral-950">
-          <button
-            onClick={() => setMode("Encode")}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${
-              mode === "Encode"
-                ? "bg-blue-500 text-white"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Encode
-          </button>
-          <button
-            onClick={() => setMode("Decode")}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${
-              mode === "Decode"
-                ? "bg-blue-500 text-white"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Decode
-          </button>
-        </div>
-      </div>
-
       {/* Memory Map Display */}
       <div className="bg-gray-50 dark:bg-neutral-900 rounded border mb-8">
-        <div className="flex p-4 justify-between items-center dark:bg-neutral-950 mb-2">
+        <div className="flex px-4 py-2 justify-between items-center dark:bg-neutral-950 mb-2">
           <h2 className="font-medium">Data Frame</h2>
+          <div className="inline-flex rounded-lg border border-gray-200 dark:border-neutral-800 p-1 bg-white dark:bg-neutral-950">
+            <button
+              onClick={() => setMode("Encode")}
+              className={`px-4 py-2 rounded-md text-sm font-medium ${
+                mode === "Encode"
+                  ? "bg-blue-500 text-white"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Encode
+            </button>
+            <button
+              onClick={() => setMode("Decode")}
+              className={`px-4 py-2 rounded-md text-sm font-medium ${
+                mode === "Decode"
+                  ? "bg-blue-500 text-white"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Decode
+            </button>
+          </div>
           <CopyFrameButton frameBytes={frameBytes} />
         </div>
         <CANFrameVisualizer
@@ -503,7 +500,7 @@ export default function MapPage() {
 
       {/* Data Values Table */}
       <div className="bg-white dark:bg-neutral-900 rounded border">
-        <div className="p-4 border-b bg-gray-50 dark:bg-neutral-950 flex justify-between items-center">
+        <div className="px-4 py-2 border-b bg-gray-50 dark:bg-neutral-950 flex justify-between items-center">
           <h2 className="font-medium">Signals</h2>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2">
