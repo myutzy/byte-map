@@ -744,8 +744,15 @@ export default function MapPage() {
               ))}
               {signals.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-4 text-center text-gray-500">
-                    No signals added. Click "Add Signal" below to begin.
+                  <td colSpan={6} className="p-4 text-center text-gray-500">
+                    No signals added. Would you like to{" "}
+                    <button
+                      onClick={addSignal}
+                      className="text-blue-500 hover:text-blue-700 hover:underline"
+                    >
+                      add one
+                    </button>
+                    ?
                   </td>
                 </tr>
               ) : null}
