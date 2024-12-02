@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ModeToggle } from "./ModeToggle";
 
 export function Header() {
   const pathname = usePathname();
@@ -30,6 +31,7 @@ export function Header() {
         >
           Map
         </Link>
+        <ModeToggle />
       </nav>
     </header>
   );
