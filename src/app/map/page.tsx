@@ -253,22 +253,14 @@ export default function MapPage() {
                 <option value="LSB">Little Endian</option>
               </select>
             </div>
-            <div className="flex gap-2">
-              {dataValues.length > 0 && (
-                <button
-                  onClick={handleClearValues}
-                  className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
-                >
-                  Clear
-                </button>
-              )}
+            {dataValues.length > 0 && (
               <button
-                onClick={addDataValue}
-                className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                onClick={handleClearValues}
+                className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
               >
-                Add Value
+                Clear
               </button>
-            </div>
+            )}
           </div>
         </div>
 
@@ -392,13 +384,37 @@ export default function MapPage() {
                   </td>
                 </tr>
               ))}
-              {dataValues.length === 0 && (
+              {dataValues.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-4 text-center text-gray-500">
-                    No data values added. Click "Add Value" to begin.
+                    No data values added. Click "Add Value" below to begin.
                   </td>
                 </tr>
-              )}
+              ) : null}
+              <tr className="border-t">
+                <td colSpan={6} className="p-4">
+                  <button
+                    onClick={addDataValue}
+                    className="w-full px-3 py-2 bg-gray-50 text-gray-700 border border-gray-200 rounded hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add Value
+                  </button>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
