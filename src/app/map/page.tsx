@@ -191,6 +191,7 @@ export default function MapPage() {
     format: "json" | "csv";
     file: File | null;
   } | null>(null);
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
 
   // Wrapper for setDataValues that also updates localStorage
   const updateSignals = (
@@ -268,9 +269,7 @@ export default function MapPage() {
   };
 
   const handleClearValues = () => {
-    if (window.confirm("Are you sure you want to clear all signals?")) {
-      updateSignals([]);
-    }
+    setClearConfirmOpen(true);
   };
 
   const handleByteChange = (index: number, hexValue: string) => {
@@ -817,6 +816,31 @@ export default function MapPage() {
               }}
             >
               Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={clearConfirmOpen} onOpenChange={setClearConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear All Signals</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove all signals from your configuration. This action
+              cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setClearConfirmOpen(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                updateSignals([]);
+                setClearConfirmOpen(false);
+              }}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Clear All
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
