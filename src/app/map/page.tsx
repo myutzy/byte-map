@@ -15,6 +15,22 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { CopyFrameButton } from "@/components/ui/copy-frame-button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface DataValue {
   id: string;
@@ -158,6 +174,11 @@ export default function MapPage() {
   );
   const [calculatorOpen, setCalculatorOpen] = useState(false);
   const [activeValueId, setActiveValueId] = useState<string | null>(null);
+  const [importConfirmOpen, setImportConfirmOpen] = useState(false);
+  const [pendingImport, setPendingImport] = useState<{
+    format: "json" | "csv";
+    file: File | null;
+  } | null>(null);
 
   // Wrapper for setDataValues that also updates localStorage
   const updateDataValues = (
@@ -313,6 +334,117 @@ export default function MapPage() {
     }
   };
 
+  const formatTimestamp = () => {
+    return new Date()
+      .toISOString()
+      .replace(/[-:]|\.\d+/g, "") // Remove dashes, colons and decimal seconds
+      .replace(/(\d{8})(\d{4}).*/, "$1T$2Z"); // Format as YYYYMMDDTHHMM
+  };
+
+  const handleExport = (format: "json" | "csv") => {
+    const timestamp = formatTimestamp();
+
+    if (format === "json") {
+      const exportData = dataValues.map(({ bitOrder, error, ...rest }) => rest);
+      const jsonStr = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `byte-map-${timestamp}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      const headers = [
+        "label",
+        "bitStart",
+        "bitLength",
+        "byteOrder",
+        "signed",
+        "value",
+      ];
+      const csvContent = [
+        headers.join(","),
+        ...dataValues.map((dv) =>
+          [
+            dv.label,
+            dv.bitStart,
+            dv.bitLength,
+            dv.byteOrder,
+            dv.signed,
+            dv.value,
+          ].join(",")
+        ),
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `byte-map-${timestamp}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const handleImport = async (format: "json" | "csv") => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = format === "json" ? ".json" : ".csv";
+
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      if (dataValues.length > 0) {
+        setPendingImport({ format, file });
+        setImportConfirmOpen(true);
+      } else {
+        processImport(format, file);
+      }
+    };
+
+    input.click();
+  };
+
+  const processImport = async (format: "json" | "csv", file: File) => {
+    try {
+      const text = await file.text();
+
+      if (format === "json") {
+        const imported = JSON.parse(text);
+        if (Array.isArray(imported)) {
+          const processedValues = imported.map((value) => ({
+            ...value,
+            id: crypto.randomUUID(),
+            bitOrder: "MSB" as BitOrder,
+          }));
+          updateDataValues(processedValues);
+        }
+      } else {
+        const lines = text.split("\n");
+        const headers = lines[0].split(",");
+        const values = lines.slice(1).map((line) => {
+          const parts = line.split(",");
+          return {
+            id: crypto.randomUUID(),
+            label: parts[0],
+            bitStart: parseInt(parts[1]),
+            bitLength: parseInt(parts[2]),
+            byteOrder: parts[3] as ByteOrder,
+            bitOrder: "MSB" as BitOrder,
+            signed: parts[4] === "true",
+            value: parts[5],
+          };
+        });
+        updateDataValues(values);
+      }
+    } catch (error) {
+      console.error("Import failed:", error);
+      alert("Failed to import file. Please check the format and try again.");
+    }
+  };
+
   return (
     <main className="min-h-screen max-w-4xl mx-auto bg-white dark:bg-gray-900 p-8">
       <Header />
@@ -373,6 +505,67 @@ export default function MapPage() {
                 <option value="LSB">Little Endian</option>
               </select>
             </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => handleImport("json")}>
+                  JSON
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleImport("csv")}>
+                  CSV
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => handleExport("json")}>
+                  JSON
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport("csv")}>
+                  CSV
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {dataValues.length > 0 && (
               <button
                 onClick={handleClearValues}
@@ -585,6 +778,38 @@ export default function MapPage() {
             : 0
         }
       />
+      <AlertDialog open={importConfirmOpen} onOpenChange={setImportConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Import</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will overwrite your existing data values. Are you sure you
+              want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setPendingImport(null);
+                setImportConfirmOpen(false);
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingImport) {
+                  processImport(pendingImport.format, pendingImport.file!);
+                }
+                setPendingImport(null);
+                setImportConfirmOpen(false);
+              }}
+            >
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }
