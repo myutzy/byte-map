@@ -273,7 +273,7 @@ export default function MapPage() {
                 <th className="p-3 text-left">Bit Length</th>
                 <th className="p-3 text-left">Signed</th>
                 <th className="p-3 text-left">Value</th>
-                <th className="p-3 text-left">Actions</th>
+                <th className="p-3 text-left"></th>
               </tr>
             </thead>
             <tbody>
