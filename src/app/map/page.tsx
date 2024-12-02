@@ -192,6 +192,8 @@ export default function MapPage() {
     file: File | null;
   } | null>(null);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [signalToDelete, setSignalToDelete] = useState<string | null>(null);
 
   // Wrapper for setDataValues that also updates localStorage
   const updateSignals = (
@@ -221,8 +223,17 @@ export default function MapPage() {
     updateSignals([...signals, newSignal]);
   };
 
-  const deleteSignal = (id: string) => {
-    updateSignals(signals.filter((signal) => signal.id !== id));
+  const handleDeleteClick = (id: string) => {
+    setSignalToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (signalToDelete) {
+      updateSignals(signals.filter((signal) => signal.id !== signalToDelete));
+      setSignalToDelete(null);
+      setDeleteConfirmOpen(false);
+    }
   };
 
   const duplicateSignal = (id: string) => {
@@ -732,7 +743,7 @@ export default function MapPage() {
                   <td className="p-3">
                     <div className="flex gap-1">
                       <button
-                        onClick={() => deleteSignal(value.id)}
+                        onClick={() => handleDeleteClick(value.id)}
                         className="p-1 text-red-500 hover:text-red-700"
                         title="Delete"
                       >
@@ -889,6 +900,28 @@ export default function MapPage() {
               className="bg-red-500 hover:bg-red-600"
             >
               Clear All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Signal</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this signal? This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteConfirmOpen(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
