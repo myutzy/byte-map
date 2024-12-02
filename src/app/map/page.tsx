@@ -44,6 +44,18 @@ interface DataValue {
   error?: string;
 }
 
+interface Signal {
+  id: string;
+  label: string;
+  bitStart: number;
+  bitLength: number;
+  byteOrder: ByteOrder;
+  bitOrder: BitOrder;
+  value: string;
+  signed: boolean;
+  error?: string;
+}
+
 interface BitCalculatorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -143,7 +155,7 @@ function BitCalculator({
   );
 }
 
-const STORAGE_KEY = "byte-map-data-values";
+const STORAGE_KEY = "byte-map-signals";
 const BYTE_ORDER_KEY = "byte-map-byte-order";
 
 // Load initial state from localStorage
@@ -165,7 +177,7 @@ const getInitialByteOrder = (): ByteOrder => {
 };
 
 export default function MapPage() {
-  const [dataValues, setDataValues] = useState<DataValue[]>(getInitialState);
+  const [signals, setSignals] = useState<Signal[]>(getInitialState);
   const [mode, setMode] = useState<"Encode" | "Decode">("Encode");
   const [globalByteOrder, setGlobalByteOrder] =
     useState<ByteOrder>(getInitialByteOrder);
@@ -181,19 +193,21 @@ export default function MapPage() {
   } | null>(null);
 
   // Wrapper for setDataValues that also updates localStorage
-  const updateDataValues = (
-    newValues: DataValue[] | ((prev: DataValue[]) => DataValue[])
+  const updateSignals = (
+    newSignals: Signal[] | ((prev: Signal[]) => Signal[])
   ) => {
-    setDataValues((currentValues) => {
-      const nextValues =
-        typeof newValues === "function" ? newValues(currentValues) : newValues;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextValues));
-      return nextValues;
+    setSignals((currentSignals) => {
+      const nextSignals =
+        typeof newSignals === "function"
+          ? newSignals(currentSignals)
+          : newSignals;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextSignals));
+      return nextSignals;
     });
   };
 
-  const addDataValue = () => {
-    const newValue: DataValue = {
+  const addSignal = () => {
+    const newSignal: Signal = {
       id: crypto.randomUUID(),
       label: "",
       bitStart: 0,
@@ -203,33 +217,33 @@ export default function MapPage() {
       value: "",
       signed: false,
     };
-    updateDataValues([...dataValues, newValue]);
+    updateSignals([...signals, newSignal]);
   };
 
-  const deleteDataValue = (id: string) => {
-    updateDataValues(dataValues.filter((value) => value.id !== id));
+  const deleteSignal = (id: string) => {
+    updateSignals(signals.filter((signal) => signal.id !== id));
   };
 
-  const validateDataValue = (value: DataValue): string => {
-    if (value.bitStart < 0 || value.bitStart > 63) {
+  const validateSignal = (signal: Signal): string => {
+    if (signal.bitStart < 0 || signal.bitStart > 63) {
       return "Bit start must be between 0 and 63";
     }
-    if (value.bitLength < 1 || value.bitLength > 64) {
+    if (signal.bitLength < 1 || signal.bitLength > 64) {
       return "Bit length must be between 1 and 64";
     }
-    if (value.bitStart + value.bitLength > 64) {
+    if (signal.bitStart + signal.bitLength > 64) {
       return "Value extends beyond the 64-bit frame";
     }
-    if (value.value && isNaN(parseInt(value.value))) {
+    if (signal.value && isNaN(parseInt(signal.value))) {
       return "Value must be a valid number";
     }
 
-    if (value.value) {
-      const numValue = parseInt(value.value);
-      const maxValue = value.signed
-        ? Math.pow(2, value.bitLength - 1) - 1
-        : Math.pow(2, value.bitLength) - 1;
-      const minValue = value.signed ? -Math.pow(2, value.bitLength - 1) : 0;
+    if (signal.value) {
+      const numValue = parseInt(signal.value);
+      const maxValue = signal.signed
+        ? Math.pow(2, signal.bitLength - 1) - 1
+        : Math.pow(2, signal.bitLength) - 1;
+      const minValue = signal.signed ? -Math.pow(2, signal.bitLength - 1) : 0;
 
       if (numValue > maxValue || numValue < minValue) {
         return `Value must be between ${minValue} and ${maxValue}`;
@@ -239,12 +253,12 @@ export default function MapPage() {
     return "";
   };
 
-  const updateDataValue = (id: string, field: keyof DataValue, value: any) => {
-    updateDataValues(
-      dataValues.map((item) => {
+  const updateSignal = (id: string, field: keyof Signal, value: any) => {
+    updateSignals(
+      signals.map((item) => {
         if (item.id !== id) return item;
         const updatedValue = { ...item, [field]: value };
-        const error = validateDataValue(updatedValue);
+        const error = validateSignal(updatedValue);
         return {
           ...updatedValue,
           error,
@@ -254,8 +268,8 @@ export default function MapPage() {
   };
 
   const handleClearValues = () => {
-    if (window.confirm("Are you sure you want to clear all data values?")) {
-      updateDataValues([]);
+    if (window.confirm("Are you sure you want to clear all signals?")) {
+      updateSignals([]);
     }
   };
 
@@ -265,7 +279,7 @@ export default function MapPage() {
     setFrameBytes(newFrameBytes);
   };
 
-  const getDecodedValue = (value: DataValue): string => {
+  const getDecodedValue = (value: Signal): string => {
     if (mode !== "Decode") return value.value;
 
     try {
@@ -320,8 +334,8 @@ export default function MapPage() {
     localStorage.setItem(BYTE_ORDER_KEY, newOrder);
 
     // Update all data values with the new byte order
-    updateDataValues(
-      dataValues.map((value) => ({
+    updateSignals(
+      signals.map((value) => ({
         ...value,
         byteOrder: newOrder,
       }))
@@ -330,7 +344,7 @@ export default function MapPage() {
 
   const handleBitCalculation = (bitStart: number) => {
     if (activeValueId) {
-      updateDataValue(activeValueId, "bitStart", bitStart);
+      updateSignal(activeValueId, "bitStart", bitStart);
     }
   };
 
@@ -345,7 +359,7 @@ export default function MapPage() {
     const timestamp = formatTimestamp();
 
     if (format === "json") {
-      const exportData = dataValues.map(({ bitOrder, error, ...rest }) => rest);
+      const exportData = signals.map(({ bitOrder, error, ...rest }) => rest);
       const jsonStr = JSON.stringify(exportData, null, 2);
       const blob = new Blob([jsonStr], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -365,7 +379,7 @@ export default function MapPage() {
       ];
       const csvContent = [
         headers.join(","),
-        ...dataValues.map((dv) =>
+        ...signals.map((dv) =>
           [
             dv.label,
             dv.bitStart,
@@ -396,7 +410,7 @@ export default function MapPage() {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
 
-      if (dataValues.length > 0) {
+      if (signals.length > 0) {
         setPendingImport({ format, file });
         setImportConfirmOpen(true);
       } else {
@@ -419,7 +433,7 @@ export default function MapPage() {
             id: crypto.randomUUID(),
             bitOrder: "MSB" as BitOrder,
           }));
-          updateDataValues(processedValues);
+          updateSignals(processedValues);
         }
       } else {
         const lines = text.split("\n");
@@ -437,7 +451,7 @@ export default function MapPage() {
             value: parts[5],
           };
         });
-        updateDataValues(values);
+        updateSignals(values);
       }
     } catch (error) {
       console.error("Import failed:", error);
@@ -480,7 +494,7 @@ export default function MapPage() {
           <CopyFrameButton frameBytes={frameBytes} />
         </div>
         <CANFrameVisualizer
-          dataValues={dataValues}
+          signals={signals}
           mode={mode}
           frameBytes={frameBytes}
           onByteChange={handleByteChange}
@@ -490,7 +504,7 @@ export default function MapPage() {
       {/* Data Values Table */}
       <div className="bg-white rounded border">
         <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
-          <h2 className="font-medium">Data Values</h2>
+          <h2 className="font-medium">Signals</h2>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium">Byte Order:</label>
@@ -566,7 +580,7 @@ export default function MapPage() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {dataValues.length > 0 && (
+            {signals.length > 0 && (
               <button
                 onClick={handleClearValues}
                 className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
@@ -590,14 +604,14 @@ export default function MapPage() {
               </tr>
             </thead>
             <tbody>
-              {dataValues.map((value) => (
+              {signals.map((value) => (
                 <tr key={value.id} className="border-b">
                   <td className="p-3">
                     <input
                       type="text"
                       value={value.label}
                       onChange={(e) =>
-                        updateDataValue(value.id, "label", e.target.value)
+                        updateSignal(value.id, "label", e.target.value)
                       }
                       className="w-full p-1 border rounded"
                       placeholder="Enter label"
@@ -611,7 +625,7 @@ export default function MapPage() {
                         max="63"
                         value={value.bitStart}
                         onChange={(e) =>
-                          updateDataValue(
+                          updateSignal(
                             value.id,
                             "bitStart",
                             parseInt(e.target.value)
@@ -661,7 +675,7 @@ export default function MapPage() {
                       max="64"
                       value={value.bitLength}
                       onChange={(e) =>
-                        updateDataValue(
+                        updateSignal(
                           value.id,
                           "bitLength",
                           parseInt(e.target.value)
@@ -676,7 +690,7 @@ export default function MapPage() {
                         type="checkbox"
                         checked={value.signed}
                         onChange={(e) =>
-                          updateDataValue(value.id, "signed", e.target.checked)
+                          updateSignal(value.id, "signed", e.target.checked)
                         }
                         className="rounded border-gray-300"
                       />
@@ -689,7 +703,7 @@ export default function MapPage() {
                         type="text"
                         value={value.value}
                         onChange={(e) =>
-                          updateDataValue(value.id, "value", e.target.value)
+                          updateSignal(value.id, "value", e.target.value)
                         }
                         className={`w-24 p-1 border rounded ${
                           value.error ? "border-red-500" : ""
@@ -709,7 +723,7 @@ export default function MapPage() {
                   </td>
                   <td className="p-3">
                     <button
-                      onClick={() => deleteDataValue(value.id)}
+                      onClick={() => deleteSignal(value.id)}
                       className="p-1 text-red-500 hover:text-red-700"
                       title="Delete"
                     >
@@ -732,17 +746,17 @@ export default function MapPage() {
                   </td>
                 </tr>
               ))}
-              {dataValues.length === 0 ? (
+              {signals.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-4 text-center text-gray-500">
-                    No data values added. Click "Add Value" below to begin.
+                    No signals added. Click "Add Signal" below to begin.
                   </td>
                 </tr>
               ) : null}
               <tr className="border-t">
                 <td colSpan={6} className="p-4">
                   <button
-                    onClick={addDataValue}
+                    onClick={addSignal}
                     className="w-full px-3 py-2 bg-gray-50 text-gray-700 border border-gray-200 rounded hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors"
                   >
                     <svg
@@ -759,7 +773,7 @@ export default function MapPage() {
                       <line x1="12" y1="5" x2="12" y2="19"></line>
                       <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
-                    Add Value
+                    Add Signal
                   </button>
                 </td>
               </tr>
@@ -774,7 +788,7 @@ export default function MapPage() {
         onCalculate={handleBitCalculation}
         initialBitStart={
           activeValueId
-            ? dataValues.find((v) => v.id === activeValueId)?.bitStart
+            ? signals.find((v) => v.id === activeValueId)?.bitStart
             : 0
         }
       />
@@ -783,8 +797,8 @@ export default function MapPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Import</AlertDialogTitle>
             <AlertDialogDescription>
-              This will overwrite your existing data values. Are you sure you
-              want to continue?
+              This will overwrite your existing signals. Are you sure you want
+              to continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
