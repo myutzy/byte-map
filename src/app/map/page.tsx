@@ -1,10 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ByteOrder, BitOrder } from "@/utils/binaryConversion";
 import { Header } from "@/components/Header";
 import { CANFrameVisualizer } from "@/components/CANFrameVisualizer";
 import { Footer } from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface DataValue {
   id: string;
@@ -16,6 +25,105 @@ interface DataValue {
   value: string;
   signed: boolean;
   error?: string;
+}
+
+interface BitCalculatorProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCalculate: (bitStart: number) => void;
+  initialBitStart?: number;
+}
+
+function BitCalculator({
+  open,
+  onOpenChange,
+  onCalculate,
+  initialBitStart = 0,
+}: BitCalculatorProps) {
+  const [byte, setByte] = useState(() =>
+    initialBitStart ? Math.floor(initialBitStart / 8).toString() : ""
+  );
+  const [bit, setBit] = useState(() =>
+    initialBitStart ? (initialBitStart % 8).toString() : ""
+  );
+
+  useEffect(() => {
+    if (open) {
+      if (initialBitStart) {
+        setByte(Math.floor(initialBitStart / 8).toString());
+        setBit((initialBitStart % 8).toString());
+      } else {
+        setByte("");
+        setBit("");
+      }
+    }
+  }, [open, initialBitStart]);
+
+  const handleCalculate = () => {
+    const byteNum = parseInt(byte);
+    const bitNum = parseInt(bit);
+
+    if (
+      !isNaN(byteNum) &&
+      !isNaN(bitNum) &&
+      byteNum >= 0 &&
+      byteNum <= 7 &&
+      bitNum >= 0 &&
+      bitNum <= 7
+    ) {
+      const bitStart = byteNum * 8 + bitNum;
+      onCalculate(bitStart);
+      onOpenChange(false);
+      setByte("");
+      setBit("");
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Calculate Bit Start Position</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="byte" className="text-right">
+              Byte (0-7):
+            </label>
+            <Input
+              id="byte"
+              type="number"
+              min="0"
+              max="7"
+              value={byte}
+              onChange={(e) => setByte(e.target.value)}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="bit" className="text-right">
+              Bit (0-7):
+            </label>
+            <Input
+              id="bit"
+              type="number"
+              min="0"
+              max="7"
+              value={bit}
+              onChange={(e) => setBit(e.target.value)}
+              className="col-span-3"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleCalculate}>OK</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 const STORAGE_KEY = "byte-map-data-values";
@@ -47,6 +155,8 @@ export default function MapPage() {
   const [frameBytes, setFrameBytes] = useState<string[]>(
     new Array(8).fill("00")
   );
+  const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const [activeValueId, setActiveValueId] = useState<string | null>(null);
 
   // Wrapper for setDataValues that also updates localStorage
   const updateDataValues = (
@@ -196,6 +306,12 @@ export default function MapPage() {
     );
   };
 
+  const handleBitCalculation = (bitStart: number) => {
+    if (activeValueId) {
+      updateDataValue(activeValueId, "bitStart", bitStart);
+    }
+  };
+
   return (
     <main className="min-h-screen max-w-4xl mx-auto bg-white dark:bg-gray-900 p-8">
       <Header />
@@ -291,20 +407,55 @@ export default function MapPage() {
                     />
                   </td>
                   <td className="p-3">
-                    <input
-                      type="number"
-                      min="0"
-                      max="63"
-                      value={value.bitStart}
-                      onChange={(e) =>
-                        updateDataValue(
-                          value.id,
-                          "bitStart",
-                          parseInt(e.target.value)
-                        )
-                      }
-                      className="w-20 p-1 border rounded"
-                    />
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        max="63"
+                        value={value.bitStart}
+                        onChange={(e) =>
+                          updateDataValue(
+                            value.id,
+                            "bitStart",
+                            parseInt(e.target.value)
+                          )
+                        }
+                        className="w-20 p-1 border rounded"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setActiveValueId(value.id);
+                          setCalculatorOpen(true);
+                        }}
+                        className="h-8 w-8"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <rect
+                            x="4"
+                            y="4"
+                            width="16"
+                            height="16"
+                            rx="2"
+                            ry="2"
+                          />
+                          <line x1="8" y1="9" x2="16" y2="9" />
+                          <line x1="8" y1="12" x2="16" y2="12" />
+                          <line x1="8" y1="15" x2="16" y2="15" />
+                        </svg>
+                      </Button>
+                    </div>
                   </td>
                   <td className="p-3">
                     <input
@@ -420,6 +571,16 @@ export default function MapPage() {
         </div>
       </div>
       <Footer />
+      <BitCalculator
+        open={calculatorOpen}
+        onOpenChange={setCalculatorOpen}
+        onCalculate={handleBitCalculation}
+        initialBitStart={
+          activeValueId
+            ? dataValues.find((v) => v.id === activeValueId)?.bitStart
+            : 0
+        }
+      />
     </main>
   );
 }
