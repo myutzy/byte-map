@@ -343,7 +343,7 @@ export default function MapPage() {
                         onChange={(e) =>
                           updateDataValue(value.id, "value", e.target.value)
                         }
-                        className={`w-full p-1 border rounded ${
+                        className={`w-24 p-1 border rounded ${
                           value.error ? "border-red-500" : ""
                         }`}
                         placeholder="Enter value"
