@@ -201,7 +201,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen max-w-4xl mx-auto bg-white dark:bg-gray-900 p-8">
+    <main className="min-h-screen max-w-4xl mx-auto bg-white dark:bg-neutral-900 p-8">
       <Header />
 
       <div className="space-y-6 max-w-4xl mx-auto">
@@ -328,7 +328,7 @@ export default function Home() {
                 Little Endian
               </label>
             </div>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               {byteOrder === "MSB"
                 ? "Big Endian: Most significant byte at lowest address. Also known as 'Motorola' format."
                 : "Little Endian: Least significant byte at lowest address. Also known as 'Intel' format."}
@@ -337,13 +337,13 @@ export default function Home() {
         </div>
 
         {number !== "" && (
-          <div className="space-y-4 bg-gray-50 p-4 rounded">
+          <div className="space-y-4 bg-gray-50 dark:bg-neutral-900 rounded">
             <div>
               <h2 className="font-medium mb-2">{toFormat} Representation:</h2>
-              <div className="font-mono bg-white p-3 rounded border">
+              <div className="font-mono bg-white dark:bg-neutral-950 p-3 rounded border">
                 {getOutputValue()}
               </div>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 {dataType.bytes} byte{dataType.bytes > 1 ? "s" : ""} •{" "}
                 {dataType.bytes * 8} bits
               </p>

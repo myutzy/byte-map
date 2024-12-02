@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import { ByteOrder, BitOrder, numberToBinary } from "@/utils/binaryConversion";
 
-interface DataValue {
+interface Signal {
   id: string;
-  label: string;
+  name: string;
   bitStart: number;
   bitLength: number;
   byteOrder: ByteOrder;
@@ -14,14 +14,14 @@ interface DataValue {
 }
 
 interface Props {
-  dataValues: DataValue[];
+  signals: Signal[];
   mode: "Encode" | "Decode";
   frameBytes: string[];
   onByteChange?: (index: number, value: string) => void;
 }
 
 export function CANFrameVisualizer({
-  dataValues,
+  signals,
   mode,
   frameBytes,
   onByteChange,
@@ -33,44 +33,46 @@ export function CANFrameVisualizer({
     // Initialize 8 bytes with zeros
     const bytes = new Array(8).fill("00000000");
 
-    dataValues.forEach((value) => {
-      if (!value.value || isNaN(parseInt(value.value))) return;
+    signals.forEach((signal) => {
+      if (!signal.value || isNaN(parseInt(signal.value))) return;
 
-      const numValue = parseInt(value.value);
+      const numValue = parseInt(signal.value);
 
       // Handle signed values
       let binaryValue: string;
-      if (value.signed && numValue < 0) {
+      if (signal.signed && numValue < 0) {
         // For negative numbers, we need to calculate the two's complement
         const absoluteValue = Math.abs(numValue);
-        const maxUnsignedValue = Math.pow(2, value.bitLength);
+        const maxUnsignedValue = Math.pow(2, signal.bitLength);
         const twosComplement = maxUnsignedValue - absoluteValue;
-        binaryValue = twosComplement.toString(2).padStart(value.bitLength, "1");
+        binaryValue = twosComplement
+          .toString(2)
+          .padStart(signal.bitLength, "1");
       } else {
         // For positive numbers or unsigned values
-        binaryValue = numValue.toString(2).padStart(value.bitLength, "0");
+        binaryValue = numValue.toString(2).padStart(signal.bitLength, "0");
       }
 
       // Calculate which bytes this value affects
-      const startByte = Math.floor(value.bitStart / 8);
-      const endByte = Math.floor((value.bitStart + value.bitLength - 1) / 8);
+      const startByte = Math.floor(signal.bitStart / 8);
+      const endByte = Math.floor((signal.bitStart + signal.bitLength - 1) / 8);
 
       // Handle byte ordering
       let orderedBinaryValue = binaryValue;
-      if (value.byteOrder === "LSB") {
+      if (signal.byteOrder === "LSB") {
         // Reverse byte order
-        const byteCount = Math.ceil(value.bitLength / 8);
+        const byteCount = Math.ceil(signal.bitLength / 8);
         const bytes = [];
         for (let i = 0; i < byteCount; i++) {
           const start = i * 8;
-          const end = Math.min(start + 8, value.bitLength);
+          const end = Math.min(start + 8, signal.bitLength);
           bytes.push(binaryValue.slice(start, end).padStart(8, "0"));
         }
         orderedBinaryValue = bytes.reverse().join("");
       }
 
       // Handle bit ordering within each byte
-      if (value.bitOrder === "LSB") {
+      if (signal.bitOrder === "LSB") {
         // Reverse bits within each byte
         const byteCount = Math.ceil(orderedBinaryValue.length / 8);
         orderedBinaryValue = Array.from({ length: byteCount })
@@ -87,10 +89,10 @@ export function CANFrameVisualizer({
       // Update the affected bytes
       for (let i = startByte; i <= endByte && i < 8; i++) {
         const byteStartBit = i * 8;
-        const valueStartBit = Math.max(0, value.bitStart - byteStartBit);
+        const valueStartBit = Math.max(0, signal.bitStart - byteStartBit);
         const valueEndBit = Math.min(
           8,
-          value.bitStart + value.bitLength - byteStartBit
+          signal.bitStart + signal.bitLength - byteStartBit
         );
 
         if (valueStartBit < 8 && valueEndBit > 0) {
@@ -107,7 +109,7 @@ export function CANFrameVisualizer({
     });
 
     return bytes;
-  }, [dataValues, mode, frameBytes]);
+  }, [signals, mode, frameBytes]);
 
   const handleHexInput = (index: number, hexValue: string) => {
     const cleanHex = hexValue.replace(/[^0-9A-Fa-f]/g, "");
@@ -117,13 +119,13 @@ export function CANFrameVisualizer({
   };
 
   return (
-    <div className="space-y-2">
-      <div className="grid grid-cols-8 gap-1 text-xs text-center text-gray-500">
+    <div className="space-y-2 mb-2">
+      <div className="grid grid-cols-8 gap-1 text-xs text-center text-gray-500 dark:text-gray-400">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i}>Byte {i}</div>
         ))}
       </div>
-      <div className="grid grid-cols-8 gap-1">
+      <div className="grid grid-cols-8 gap-2 m-2">
         {encodedBytes.map((byte, i) => {
           const hexValue =
             mode === "Decode"
@@ -138,10 +140,10 @@ export function CANFrameVisualizer({
 
           return (
             <div key={i} className="space-y-1">
-              <div className="aspect-square border rounded bg-white flex flex-col items-center justify-center font-mono text-sm">
-                <div className="text-xs font-mono text-center">
+              <div className="aspect-square border rounded bg-white dark:bg-neutral-950 flex flex-col items-center justify-center font-mono text-sm">
+                <div className="text-sm font-mono text-center">
                   {mode === "Encode" ? (
-                    <div className="text-xs font-mono text-center">
+                    <div className="text-sm font-mono text-center">
                       <span className="text-gray-400">0x</span>
                       <span
                         className={
