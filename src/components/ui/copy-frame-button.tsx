@@ -50,7 +50,7 @@ export function CopyFrameButton({
           size="icon"
           variant="ghost"
           className={cn(
-            "relative z-10 h-6 w-6 bg-gray-50 text-gray-700 hover:bg-gray-100",
+            "relative z-10 h-6 w-6 bg-gray-50 dark:bg-neutral-950 text-gray-700 dark:text-gray-300 hover:bg-gray-100 hover:dark:bg-neutral-800",
             className
           )}
         >

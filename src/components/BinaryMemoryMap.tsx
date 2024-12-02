@@ -33,15 +33,18 @@ export function BinaryMemoryMap({
     byteOrder === "MSB" ? byteGroups : [...byteGroups].reverse();
 
   return (
-    <div className="mt-4">
-      <div className="flex justify-between text-sm text-gray-600 mb-1">
-        <span>{bitOrder === "MSB" ? "MSB > LSB" : "LSB > MSB"}</span>
+    <div className="mt-2">
+      <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
+        <span>{byteOrder === "MSB" ? "MSB → LSB" : "LSB → MSB"}</span>
         <span>Memory Address: Increasing →</span>
       </div>
       <div className="flex flex-wrap gap-2">
         {orderedBytes.map((byte, index) => (
-          <div key={index} className="border rounded p-2 bg-white">
-            <div className="text-xs text-gray-500 mb-1 text-center">
+          <div
+            key={index}
+            className="border rounded p-2 bg-white dark:bg-neutral-950"
+          >
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-1 text-center">
               {byteOrder === "MSB"
                 ? `Byte ${index}`
                 : `Byte ${bytes - index - 1}`}
@@ -53,8 +56,8 @@ export function BinaryMemoryMap({
                       key={bitIndex}
                       className={`w-4 text-center ${
                         bit === "1"
-                          ? "text-blue-600 font-bold"
-                          : "text-gray-400"
+                          ? "text-blue-600 dark:text-blue-500 font-bold"
+                          : "text-gray-400 dark:text-gray-300"
                       }`}
                     >
                       {bit}
@@ -75,9 +78,6 @@ export function BinaryMemoryMap({
                         {bit}
                       </span>
                     ))}
-            </div>
-            <div className="text-xs text-gray-500 mt-1 text-center">
-              {bitOrder === "MSB" ? "MSB → LSB" : "LSB → MSB"}
             </div>
           </div>
         ))}

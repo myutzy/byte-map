@@ -120,7 +120,7 @@ export function CANFrameVisualizer({
 
   return (
     <div className="space-y-2 mb-2">
-      <div className="grid grid-cols-8 gap-1 text-xs text-center text-gray-500">
+      <div className="grid grid-cols-8 gap-1 text-xs text-center text-gray-500 dark:text-gray-400">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i}>Byte {i}</div>
         ))}
@@ -140,10 +140,10 @@ export function CANFrameVisualizer({
 
           return (
             <div key={i} className="space-y-1">
-              <div className="aspect-square border rounded bg-white flex flex-col items-center justify-center font-mono text-sm">
-                <div className="text-xs font-mono text-center">
+              <div className="aspect-square border rounded bg-white dark:bg-neutral-950 flex flex-col items-center justify-center font-mono text-sm">
+                <div className="text-sm font-mono text-center">
                   {mode === "Encode" ? (
-                    <div className="text-xs font-mono text-center">
+                    <div className="text-sm font-mono text-center">
                       <span className="text-gray-400">0x</span>
                       <span
                         className={

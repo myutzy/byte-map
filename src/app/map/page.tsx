@@ -460,10 +460,10 @@ export default function MapPage() {
   };
 
   return (
-    <main className="min-h-screen max-w-4xl mx-auto bg-white dark:bg-gray-900 p-8">
+    <main className="min-h-screen max-w-4xl mx-auto bg-white dark:bg-neutral-900 p-8">
       <Header />
       <div className="flex justify-center items-center mb-4">
-        <div className="inline-flex rounded-lg border border-gray-200 p-1 bg-white">
+        <div className="inline-flex rounded-lg border border-gray-200 dark:border-neutral-800 p-1 bg-white dark:bg-neutral-950">
           <button
             onClick={() => setMode("Encode")}
             className={`px-4 py-2 rounded-md text-sm font-medium ${
@@ -488,8 +488,8 @@ export default function MapPage() {
       </div>
 
       {/* Memory Map Display */}
-      <div className="bg-gray-50 rounded border mb-8">
-        <div className="flex p-4 justify-between items-center">
+      <div className="bg-gray-50 dark:bg-neutral-900 rounded border mb-8">
+        <div className="flex p-4 justify-between items-center dark:bg-neutral-950 mb-2">
           <h2 className="font-medium">Data Frame</h2>
           <CopyFrameButton frameBytes={frameBytes} />
         </div>
@@ -502,10 +502,10 @@ export default function MapPage() {
       </div>
 
       {/* Data Values Table */}
-      <div className="bg-white rounded border">
-        <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
+      <div className="bg-white dark:bg-neutral-900 rounded border">
+        <div className="p-4 border-b bg-gray-50 dark:bg-neutral-950 flex justify-between items-center">
           <h2 className="font-medium">Signals</h2>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium">Byte Order:</label>
               <select
@@ -522,7 +522,7 @@ export default function MapPage() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
+                <button className="p-2 bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 hover:dark:bg-neutral-700">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="16"
@@ -552,7 +552,7 @@ export default function MapPage() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
+                <button className="p-2 bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 hover:dark:bg-neutral-700">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="16"
@@ -583,7 +583,7 @@ export default function MapPage() {
             {signals.length > 0 && (
               <button
                 onClick={handleClearValues}
-                className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
+                className="px-3 py-1 bg-red-100 dark:bg-red-900 text-red-700 dark:text-white rounded hover:bg-red-200 hover:dark:bg-red-800"
               >
                 Clear
               </button>
@@ -757,7 +757,7 @@ export default function MapPage() {
                 <td colSpan={6} className="p-4">
                   <button
                     onClick={addSignal}
-                    className="w-full px-3 py-2 bg-gray-50 text-gray-700 border border-gray-200 rounded hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors"
+                    className="px-3 py-2 bg-gray-50 text-gray-700 border border-gray-200 rounded hover:bg-gray-100 flex items-center justify-center gap-2 transition-colors"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
