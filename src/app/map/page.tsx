@@ -488,9 +488,9 @@ export default function MapPage() {
       </div>
 
       {/* Memory Map Display */}
-      <div className="bg-gray-50 p-4 rounded mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-medium">Data Frame (8 bytes)</h2>
+      <div className="bg-gray-50 rounded border mb-8">
+        <div className="flex p-4 justify-between items-center">
+          <h2 className="font-medium">Data Frame</h2>
           <CopyFrameButton frameBytes={frameBytes} />
         </div>
         <CANFrameVisualizer

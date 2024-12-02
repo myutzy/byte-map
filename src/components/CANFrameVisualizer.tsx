@@ -119,13 +119,13 @@ export function CANFrameVisualizer({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 mb-2">
       <div className="grid grid-cols-8 gap-1 text-xs text-center text-gray-500">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i}>Byte {i}</div>
         ))}
       </div>
-      <div className="grid grid-cols-8 gap-1">
+      <div className="grid grid-cols-8 gap-2 m-2">
         {encodedBytes.map((byte, i) => {
           const hexValue =
             mode === "Decode"
