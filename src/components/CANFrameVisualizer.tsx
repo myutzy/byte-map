@@ -3,7 +3,7 @@ import { ByteOrder, BitOrder, numberToBinary } from "@/utils/binaryConversion";
 
 interface Signal {
   id: string;
-  label: string;
+  name: string;
   bitStart: number;
   bitLength: number;
   byteOrder: ByteOrder;

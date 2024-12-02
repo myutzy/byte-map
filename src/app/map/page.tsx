@@ -46,7 +46,7 @@ interface DataValue {
 
 interface Signal {
   id: string;
-  label: string;
+  name: string;
   bitStart: number;
   bitLength: number;
   byteOrder: ByteOrder;
@@ -159,7 +159,7 @@ const STORAGE_KEY = "byte-map-signals";
 const BYTE_ORDER_KEY = "byte-map-byte-order";
 
 // Load initial state from localStorage
-const getInitialState = (): DataValue[] => {
+const getInitialState = (): Signal[] => {
   if (typeof window === "undefined") return [];
 
   try {
@@ -209,7 +209,7 @@ export default function MapPage() {
   const addSignal = () => {
     const newSignal: Signal = {
       id: crypto.randomUUID(),
-      label: "",
+      name: "",
       bitStart: 0,
       bitLength: 8,
       byteOrder: globalByteOrder,
@@ -370,7 +370,7 @@ export default function MapPage() {
       URL.revokeObjectURL(url);
     } else {
       const headers = [
-        "label",
+        "name",
         "bitStart",
         "bitLength",
         "byteOrder",
@@ -381,7 +381,7 @@ export default function MapPage() {
         headers.join(","),
         ...signals.map((dv) =>
           [
-            dv.label,
+            dv.name,
             dv.bitStart,
             dv.bitLength,
             dv.byteOrder,
@@ -442,7 +442,7 @@ export default function MapPage() {
           const parts = line.split(",");
           return {
             id: crypto.randomUUID(),
-            label: parts[0],
+            name: parts[0],
             bitStart: parseInt(parts[1]),
             bitLength: parseInt(parts[2]),
             byteOrder: parts[3] as ByteOrder,
@@ -595,7 +595,7 @@ export default function MapPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b">
-                <th className="p-3 text-left">Label</th>
+                <th className="p-3 text-left">Name</th>
                 <th className="p-3 text-left">Bit Start</th>
                 <th className="p-3 text-left">Bit Length</th>
                 <th className="p-3 text-left">Signed</th>
@@ -609,12 +609,12 @@ export default function MapPage() {
                   <td className="p-3">
                     <input
                       type="text"
-                      value={value.label}
+                      value={value.name}
                       onChange={(e) =>
-                        updateSignal(value.id, "label", e.target.value)
+                        updateSignal(value.id, "name", e.target.value)
                       }
                       className="w-full p-1 border rounded"
-                      placeholder="Enter label"
+                      placeholder="Enter name"
                     />
                   </td>
                   <td className="p-3">
