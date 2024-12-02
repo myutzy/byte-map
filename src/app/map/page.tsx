@@ -14,6 +14,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { CopyFrameButton } from "@/components/ui/copy-frame-button";
 
 interface DataValue {
   id: string;
@@ -342,7 +343,10 @@ export default function MapPage() {
 
       {/* Memory Map Display */}
       <div className="bg-gray-50 p-4 rounded mb-8">
-        <h2 className="font-medium mb-4">Data Frame (8 bytes)</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="font-medium">Data Frame (8 bytes)</h2>
+          <CopyFrameButton frameBytes={frameBytes} />
+        </div>
         <CANFrameVisualizer
           dataValues={dataValues}
           mode={mode}
