@@ -176,6 +176,51 @@ const getInitialByteOrder = (): ByteOrder => {
   return (localStorage.getItem(BYTE_ORDER_KEY) as ByteOrder) || "MSB";
 };
 
+// Add this helper function after the BitCalculator component
+const encodeValueToFrame = (signal: Signal): string[] => {
+  try {
+    // Convert value to number
+    const numValue = parseInt(signal.value);
+    if (isNaN(numValue)) return new Array(8).fill("00");
+
+    // Create a binary string of the correct length
+    let binaryValue = (numValue >>> 0)
+      .toString(2)
+      .padStart(signal.bitLength, "0")
+      .slice(-signal.bitLength);
+
+    // Create frame bytes
+    const frameBytes = new Array(8).fill("00");
+    const startByte = Math.floor(signal.bitStart / 8);
+    const startBit = signal.bitStart % 8;
+
+    // For a signal starting at bit 16 with length 2, we want to place it in byte 2
+    // at the correct bit position
+    const byteValue =
+      parseInt(binaryValue, 2) << (8 - startBit - signal.bitLength);
+    frameBytes[startByte] = byteValue.toString(16).padStart(2, "0");
+
+    // Handle byte ordering if needed
+    if (signal.byteOrder === "LSB" && signal.bitLength > 8) {
+      // Reverse the affected bytes
+      const affectedByteCount = Math.ceil(signal.bitLength / 8);
+      const startIdx = startByte;
+      const endIdx = startIdx + affectedByteCount - 1;
+
+      for (let i = 0; i < Math.floor(affectedByteCount / 2); i++) {
+        const temp = frameBytes[startIdx + i];
+        frameBytes[startIdx + i] = frameBytes[endIdx - i];
+        frameBytes[endIdx - i] = temp;
+      }
+    }
+
+    return frameBytes;
+  } catch (e) {
+    console.error("Error encoding value:", e);
+    return new Array(8).fill("00");
+  }
+};
+
 export default function MapPage() {
   const [signals, setSignals] = useState<Signal[]>(getInitialState);
   const [mode, setMode] = useState<"Encode" | "Decode">("Encode");
@@ -480,6 +525,28 @@ export default function MapPage() {
       alert("Failed to import file. Please check the format and try again.");
     }
   };
+
+  // Update useEffect to handle encoding
+  useEffect(() => {
+    if (mode === "Encode") {
+      let newFrameBytes = new Array(8).fill("00");
+
+      // Process signals in order
+      signals.forEach((signal) => {
+        if (signal.value && !signal.error) {
+          const encodedBytes = encodeValueToFrame(signal);
+          // Merge the encoded bytes with existing frame
+          newFrameBytes = newFrameBytes.map((existing, index) => {
+            const newByte = parseInt(encodedBytes[index], 16);
+            const existingByte = parseInt(existing, 16);
+            return (newByte | existingByte).toString(16).padStart(2, "0");
+          });
+        }
+      });
+
+      setFrameBytes(newFrameBytes);
+    }
+  }, [signals, mode]);
 
   return (
     <main className="min-h-screen max-w-4xl mx-auto bg-white dark:bg-neutral-900 p-8">
