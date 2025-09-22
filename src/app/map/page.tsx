@@ -179,40 +179,42 @@ const getInitialByteOrder = (): ByteOrder => {
 // Add this helper function after the BitCalculator component
 const encodeValueToFrame = (signal: Signal): string[] => {
   try {
-    // Convert value to number
-    const numValue = parseInt(signal.value);
-    if (isNaN(numValue)) return new Array(8).fill("00");
+    if (signal.value === "") return new Array(8).fill("00");
 
-    // Create a binary string of the correct length
-    let binaryValue = (numValue >>> 0)
-      .toString(2)
-      .padStart(signal.bitLength, "0")
-      .slice(-signal.bitLength);
+    let parsed = parseInt(signal.value, 10);
+    if (isNaN(parsed)) return new Array(8).fill("00");
 
-    // Create frame bytes
-    const frameBytes = new Array(8).fill("00");
-    const startByte = Math.floor(signal.bitStart / 8);
-    const startBit = signal.bitStart % 8;
+    // Fit into bitLength with two's complement for signed negatives
+    const bitLength = BigInt(signal.bitLength);
+    const mask = (1n << bitLength) - 1n;
 
-    // For a signal starting at bit 16 with length 2, we want to place it in byte 2
-    // at the correct bit position
-    const byteValue =
-      parseInt(binaryValue, 2) << (8 - startBit - signal.bitLength);
-    frameBytes[startByte] = byteValue.toString(16).padStart(2, "0");
-
-    // Handle byte ordering if needed
-    if (signal.byteOrder === "LSB" && signal.bitLength > 8) {
-      // Reverse the affected bytes
-      const affectedByteCount = Math.ceil(signal.bitLength / 8);
-      const startIdx = startByte;
-      const endIdx = startIdx + affectedByteCount - 1;
-
-      for (let i = 0; i < Math.floor(affectedByteCount / 2); i++) {
-        const temp = frameBytes[startIdx + i];
-        frameBytes[startIdx + i] = frameBytes[endIdx - i];
-        frameBytes[endIdx - i] = temp;
-      }
+    let valueBigInt: bigint;
+    if (signal.signed && parsed < 0) {
+      const mod = (1n << bitLength);
+      valueBigInt = (BigInt(parsed) + mod) & mask;
+    } else {
+      valueBigInt = BigInt(parsed) & mask;
     }
+
+    // Place into a 64-bit little-endian aggregate
+    let aggregate = 0n;
+
+    if (signal.byteOrder === "LSB") {
+      // Intel/Little-endian bit numbering
+      aggregate |= (valueBigInt & mask) << BigInt(signal.bitStart);
+    } else {
+      // Big-endian: convert bitStart to little-endian aligned position
+      const leBitStart = 64n - (BigInt(signal.bitStart) + bitLength);
+      aggregate |= (valueBigInt & mask) << leBitStart;
+    }
+
+    // Emit 8 bytes in little-endian order into hex strings
+    const frameBytes: string[] = new Array(8)
+      .fill("00")
+      .map((_, i) => {
+        const byte = Number((aggregate >> BigInt(i * 8)) & 0xffn);
+        return byte.toString(16).padStart(2, "0");
+      });
 
     return frameBytes;
   } catch (e) {
@@ -350,47 +352,38 @@ export default function MapPage() {
     if (mode !== "Decode") return value.value;
 
     try {
-      // Convert frame bytes to binary string
-      const binaryString = frameBytes
-        .map((hex) => parseInt(hex, 16).toString(2).padStart(8, "0"))
-        .join("");
+      // Build a 64-bit little-endian aggregate from the 8 frame bytes
+      let aggregate = 0n;
+      for (let i = 0; i < 8; i++) {
+        const byte = BigInt(parseInt(frameBytes[i] || "00", 16) & 0xff);
+        aggregate |= byte << BigInt(i * 8);
+      }
 
-      // Extract bits for this value
-      const bits = binaryString.slice(
-        value.bitStart,
-        value.bitStart + value.bitLength
-      );
+      const bitLength = BigInt(value.bitLength);
+      const mask = (1n << bitLength) - 1n;
 
-      // Handle byte and bit ordering
-      let orderedBits = bits;
+      let shifted: bigint;
       if (value.byteOrder === "LSB") {
-        // Reverse byte order
-        const bytes = [];
-        for (let i = 0; i < bits.length; i += 8) {
-          bytes.push(bits.slice(i, i + 8).padStart(8, "0"));
+        // Intel/Little-endian bit numbering: start at bitStart from LSB
+        shifted = aggregate >> BigInt(value.bitStart);
+      } else {
+        // Big-endian: translate bitStart into little-endian aligned offset
+        const leBitStart = 64n - (BigInt(value.bitStart) + bitLength);
+        shifted = aggregate >> leBitStart;
+      }
+
+      let extracted = shifted & mask;
+
+      // Two's complement for signed values
+      if (value.signed) {
+        const signBit = 1n << (bitLength - 1n);
+        if ((extracted & signBit) !== 0n) {
+          const full = 1n << bitLength;
+          extracted = extracted - full;
         }
-        orderedBits = bytes.reverse().join("");
       }
 
-      if (value.bitOrder === "LSB") {
-        // Reverse bits within each byte
-        const bytes = [];
-        for (let i = 0; i < orderedBits.length; i += 8) {
-          const byte = orderedBits.slice(i, i + 8).padStart(8, "0");
-          bytes.push(byte.split("").reverse().join(""));
-        }
-        orderedBits = bytes.join("");
-      }
-
-      // Convert to number
-      let numValue = parseInt(orderedBits, 2);
-
-      // Handle signed values
-      if (value.signed && orderedBits[0] === "1") {
-        numValue = numValue - Math.pow(2, value.bitLength);
-      }
-
-      return numValue.toString();
+      return extracted.toString();
     } catch (e) {
       return "Error";
     }
